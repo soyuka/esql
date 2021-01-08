@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of the API Platform project.
+ * This file is part of the ESQL project.
  *
- * (c) Kévin Dunglas <dunglas@gmail.com>
+ * (c) Antoine Bluchet <soyuka@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -49,11 +49,15 @@ trait ClassInfoTrait
         }
 
         $className = ltrim($className, '\\');
+        $pos = strrpos($className, '\\');
+        if (false === $pos) {
+            return $className;
+        }
 
         return substr(
             $className,
             8 + $positionPm,
-            strrpos($className, '\\') - ($positionPm + 8)
+            $pos - ($positionPm + 8)
         );
     }
 }
