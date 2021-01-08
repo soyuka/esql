@@ -15,9 +15,9 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\DataPersister;
 
 use ApiPlatform\Core\DataPersister\ContextAwareDataPersisterInterface;
 use ApiPlatform\Core\DataPersister\DataPersisterInterface;
-use ApiPlatform\Core\Util\ClassInfoTrait;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
+use Soyuka\ESQL\Bridge\Doctrine\ClassInfoTrait;
 use Soyuka\ESQL\ESQLInterface;
 
 final class DataPersister implements DataPersisterInterface, ContextAwareDataPersisterInterface
