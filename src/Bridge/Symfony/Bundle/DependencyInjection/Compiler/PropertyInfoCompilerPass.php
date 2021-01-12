@@ -27,8 +27,9 @@ final class PropertyInfoCompilerPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
-        $definition = $container->getDefinition('doctrine.orm.default_entity_manager.property_info_extractor');
-        $definition->setTags([]);
-        $container->setDefinition('doctrine.orm.default_entity_manager.property_info_extractor', $definition);
+        // Doesn't work for property_info.cache ?
+        // $definition = $container->getDefinition('doctrine.orm.default_entity_manager.property_info_extractor');
+        // $definition->setTags([]);
+        // $container->setDefinition('doctrine.orm.default_entity_manager.property_info_extractor', $definition);
     }
 }

@@ -25,13 +25,15 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
 {
     private ManagerRegistry $managerRegistry;
     private AutoMapperInterface $automapper;
+    private iterable $collectionExtensions;
     private array $eSQL;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $eSQL)
+    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $eSQL, iterable $collectionExtensions = [])
     {
         $this->managerRegistry = $managerRegistry;
         $this->automapper = $automapper;
         $this->eSQL = $eSQL();
+        $this->collectionExtensions = $collectionExtensions;
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
@@ -47,6 +49,12 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
         $query = <<<SQL
         SELECT * FROM {$Table($resourceClass)}
 SQL;
+
+        foreach ($this->collectionExtensions as $extension) {
+            if ($extension->supports($resourceClass, $operationName, $context)) {
+                $query = $extension->apply($query, $resourceClass, $operationName, $context);
+            }
+        }
 
         $stmt = $connection->prepare($query);
         $stmt->execute();

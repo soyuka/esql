@@ -1,0 +1,3 @@
+Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
+    car_{1..100}:
+        name: <name()>

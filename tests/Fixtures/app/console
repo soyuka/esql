@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Debug\Debug;
+
+set_time_limit(0);
+
+require_once __DIR__.'/bootstrap.php';
+require_once __DIR__.'/AppKernel.php';
+
+$input = new ArgvInput();
+$env = $input->getParameterOption(['--env', '-e'], $_SERVER['APP_ENV'] ?? 'test', true);
+$debug = ($_SERVER['APP_DEBUG'] ?? false) && !$input->hasParameterOption('--no-debug', true) && 'prod' !== $env;
+
+if ($debug) {
+    Debug::enable();
+}
+
+error_reporting(E_ALL & ~E_USER_DEPRECATED);
+
+$kernel = new AppKernel($env, $debug);
+$application = new Application($kernel);
+$application->run($input);
+
