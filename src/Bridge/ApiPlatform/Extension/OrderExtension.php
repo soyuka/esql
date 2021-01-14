@@ -14,8 +14,9 @@ declare(strict_types=1);
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
-
-// use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use LogicException;
+use PhpMyAdmin\SqlParser\Parser;
+use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 
 final class OrderExtension implements QueryCollectionExtensionInterface
 {
@@ -26,9 +27,25 @@ final class OrderExtension implements QueryCollectionExtensionInterface
         $this->resourceMetadataFactory = $resourceMetadataFactory;
     }
 
-    public function apply(string $query, string $resourceClass, ?string $operationName = null, array $context = []): string
+    public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array
     {
-        $defaultOrder = $this->resourceMetadataFactory->create($resourceClass)->getAttribute('order');
+        $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
+        $defaultOrder = $resourceMetadata->getCollectionOperationAttribute($operationName, 'order', [], true);
+
+        // TODO: deprecate this as it has no effects
+        if (\is_string($defaultOrder)) {
+            return [$query, $parameters];
+        }
+
+        $parser = new Parser($query);
+        $statement = $parser->statements[0];
+
+        if (!$statement instanceof SelectStatement) {
+            throw new LogicException('No select statement found, can not order.');
+        }
+
+        $alias = $statement->from[0]->alias;
+
         $orders = [];
         foreach ($defaultOrder as $field => $order) {
             if (\is_int($field)) {
@@ -37,10 +54,10 @@ final class OrderExtension implements QueryCollectionExtensionInterface
                 $order = 'ASC';
             }
 
-            $orders[] = "$field $order";
+            $orders[] = $alias ? "$alias.$field $order" : "$field $order";
         }
 
-        return $query.' ORDER BY '.implode(', ', $orders);
+        return [$orders ? $query.' ORDER BY '.implode(', ', $orders) : $query, $parameters];
     }
 
     public function supports(string $resourceClass, ?string $operationName = null, array $context = []): bool

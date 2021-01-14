@@ -1,3 +1,14 @@
 Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
-    car_{1..100}:
+    car_starting_with_a{1..10}:
+        name: <carName('a')>
+        model: '@models*'
+    car_starting_with_b{1..10}:
+        name: <carName('b')>
+        model: '@models*'
+    car_starting_with_c{1..10}:
+        name: <carName('c')>
+        model: '@models*'
+
+Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model:
+    models_{1..10}:
         name: <name()>

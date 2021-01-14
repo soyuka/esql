@@ -17,7 +17,7 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
 interface QueryCollectionExtensionInterface
 {
-    public function apply(string $query, string $resourceClass, ?string $operationName = null, array $context = []): string;
+    public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array;
 
     public function supports(string $resourceClass, ?string $operationName = null, array $context = []): bool;
 }

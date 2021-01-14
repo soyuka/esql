@@ -63,4 +63,8 @@ parameters:
     container.dumper.inline_class_loader: true
     api_platform.swagger.api_keys: []
 
-services: ~
+services:
+    _defaults:
+        autoconfigure: true
+        autowire: true
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\Faker\Provider\CarProvider: ~

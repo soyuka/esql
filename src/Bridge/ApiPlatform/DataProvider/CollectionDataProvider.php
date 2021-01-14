@@ -18,22 +18,30 @@ use ApiPlatform\Core\DataProvider\ContextAwareCollectionDataProviderInterface;
 use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Jane\AutoMapper\AutoMapperInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\ESQLMapperInterface;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 
 final class CollectionDataProvider implements RestrictedDataProviderInterface, CollectionDataProviderInterface, ContextAwareCollectionDataProviderInterface
 {
     private ManagerRegistry $managerRegistry;
-    private AutoMapperInterface $automapper;
-    private iterable $collectionExtensions;
+    private ESQLMapperInterface $mapper;
     private array $eSQL;
+    private DataPaginator $dataPaginator;
+    private iterable $collectionExtensions;
+    private LoggerInterface $logger;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $eSQL, iterable $collectionExtensions = [])
+    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $eSQL, DataPaginator $dataPaginator, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
     {
         $this->managerRegistry = $managerRegistry;
-        $this->automapper = $automapper;
+        $this->mapper = $mapper;
         $this->eSQL = $eSQL();
+        $this->dataPaginator = $dataPaginator;
         $this->collectionExtensions = $collectionExtensions;
+        $this->logger = $logger ?: new NullLogger();
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
@@ -44,22 +52,28 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $Table] = $this->eSQL;
+        ['table' => $Table, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = $this->eSQL;
 
         $query = <<<SQL
-        SELECT * FROM {$Table($resourceClass)}
+        SELECT {$Columns(Car::class)}, {$Columns(Model::class)} FROM {$Table($resourceClass)}
+        INNER JOIN {$Table(Model::class)} ON {$JoinPredicate(Car::class, Model::class)}
 SQL;
 
+        $parameters = [];
         foreach ($this->collectionExtensions as $extension) {
             if ($extension->supports($resourceClass, $operationName, $context)) {
-                $query = $extension->apply($query, $resourceClass, $operationName, $context);
+                [$query, $parameters] = $extension->apply($query, $resourceClass, $operationName, $parameters, $context);
             }
+        }
+
+        if ($this->dataPaginator->shouldPaginate($resourceClass, $operationName)) {
+            return $this->dataPaginator->paginate($query, $resourceClass, $operationName, $context);
         }
 
         $stmt = $connection->prepare($query);
         $stmt->execute();
         $data = $stmt->fetchAll();
 
-        return array_map(fn (array $value) => $this->automapper->map($value, $resourceClass), $data);
+        return $this->mapper->map($data, $resourceClass);
     }
 }

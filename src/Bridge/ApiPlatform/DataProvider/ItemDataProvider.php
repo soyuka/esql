@@ -53,6 +53,7 @@ SQL;
         if (!$data) {
             return null;
         }
+
         /** @var object */
         return $this->automapper->map($data, $resourceClass);
     }

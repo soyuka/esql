@@ -17,24 +17,31 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * @ApiResource(attributes={"order"={"name"="ASC", "id"="ASC"}})
  * @ApiResource
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass=CarRepository::class)
  */
-class Car
+final class Car
 {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
-    public function getId(): ?int
+    /**
+     * @ORM\ManyToOne(targetEntity=Model::class, inversedBy="cars")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private ?Model $model = null;
+
+    public function getId(): int
     {
         return $this->id;
     }
@@ -46,7 +53,7 @@ class Car
         return $this;
     }
 
-    public function getName(): ?string
+    public function getName(): string
     {
         return $this->name;
     }
@@ -54,6 +61,18 @@ class Car
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getModel(): ?Model
+    {
+        return $this->model;
+    }
+
+    public function setModel(?Model $model): self
+    {
+        $this->model = $model;
 
         return $this;
     }

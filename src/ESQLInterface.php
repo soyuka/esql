@@ -27,7 +27,7 @@ interface ESQLInterface
      *
      * @param object|string $objectOrClass
      */
-    public function columns($objectOrClass, string $glue = ', ', ?array $fields = null): string;
+    public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string;
 
     /**
      * Retrieves identifiers predicate, for example id = :id.
@@ -37,11 +37,19 @@ interface ESQLInterface
     public function identifierPredicate($objectOrClass): string;
 
     /**
+     * Retrieves join predicate, for example car.model_id = model.id.
+     *
+     * @param object|string $objectOrClass
+     * @param object|string $relationObjectOrClass
+     */
+    public function joinPredicate($objectOrClass, $relationObjectOrClass): string;
+
+    /**
      * Retrieves identifiers predicate, for example foo = :foo.
      *
      * @param object|string $objectOrClass
      */
-    public function predicates($objectOrClass, string $glue = ', ', ?array $fields = null): string;
+    public function predicates($objectOrClass, ?array $fields = null, string $glue = ', '): string;
 
     /**
      * Retrieves a list of binded parameters.
@@ -52,4 +60,16 @@ interface ESQLInterface
      * Get closures to ease HEREDOC calls.
      */
     public function __invoke(): array;
+
+    /**
+     * Get the class alias.
+     *
+     * @param object|string $objectOrClass
+     */
+    public static function getAlias($objectOrClass): string;
+
+    /**
+     * Get the class matching a given alias.
+     */
+    public static function getClass(string $alias): string;
 }

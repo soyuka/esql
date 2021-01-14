@@ -15,6 +15,7 @@ namespace Soyuka\ESQL\Bridge\Doctrine;
 
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Soyuka\ESQL\ESQL as Base;
 
 final class ESQL extends Base
@@ -29,33 +30,59 @@ final class ESQL extends Base
     public function table($objectOrClass): string
     {
         $metadata = $this->getClassMetadata($objectOrClass);
+        $alias = $this->getAlias($objectOrClass);
 
-        return $metadata->getTableName();
+        return $metadata->getTableName().' '.$alias;
     }
 
-    public function columns($objectOrClass, string $glue = ', ', ?array $fields = null): string
+    public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string
     {
         $metadata = $this->getClassMetadata($objectOrClass);
         $fields = $fields ? array_intersect_key($metadata->fieldMappings, array_flip($fields)) : $metadata->fieldMappings;
+        $alias = $this->getAlias($objectOrClass);
 
-        return implode($glue, array_map(fn ($value) => $value['columnName'], $fields));
+        return implode($glue, array_map(fn ($value) => $alias.'.'.$value['columnName'].' as '.$alias.'_'.$value['columnName'], $fields));
     }
 
     public function identifierPredicate($objectOrClass): string
     {
         $metadata = $this->getClassMetadata($objectOrClass);
 
-        return $this->predicates($objectOrClass, ' AND ', $metadata->getIdentifierFieldNames());
+        return $this->predicates($objectOrClass, $metadata->getIdentifierFieldNames(), ' AND ');
     }
 
-    public function predicates($objectOrClass, string $glue = ', ', ?array $fields = null): string
+    public function joinPredicate($objectOrClass, $relationObjectOrClass): string
     {
         $metadata = $this->getClassMetadata($objectOrClass);
+        $alias = $this->getAlias($objectOrClass);
+        $relationMetadata = $this->getClassMetadata($relationObjectOrClass);
+        $relationAlias = $this->getAlias($relationObjectOrClass);
+
+        foreach ($metadata->getAssociationMappings() as $association) {
+            if ($association['targetEntity'] === $relationMetadata->name) {
+                $str = '';
+                foreach ($association['joinColumns'] as $i => $joinColumn) {
+                    $str .= 0 === $i ? '' : ' AND ';
+                    $str .= $relationAlias.'.'.$joinColumn['referencedColumnName'];
+                    $str .= ' = '.$alias.'.'.$joinColumn['name'];
+                }
+
+                return $str;
+            }
+        }
+
+        throw new LogicException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
+    }
+
+    public function predicates($objectOrClass, ?array $fields = null, string $glue = ', '): string
+    {
+        $metadata = $this->getClassMetadata($objectOrClass);
+        $alias = $this->getAlias($objectOrClass);
         $fields = $fields ? array_intersect_key($metadata->fieldMappings, array_flip($fields)) : $metadata->fieldMappings;
         $str = '';
         foreach ($fields as $fieldName => $field) {
             $str .= $str ? $glue : '';
-            $str .= $field['columnName'].' = :'.$fieldName;
+            $str .= $alias.'.'.$field['columnName'].' = :'.$fieldName;
         }
 
         return $str;
