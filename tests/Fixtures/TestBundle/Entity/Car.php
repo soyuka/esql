@@ -28,52 +28,21 @@ final class Car
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private int $id;
+    public int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private string $name;
+    public string $name;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    public ?string $color = null;
 
     /**
      * @ORM\ManyToOne(targetEntity=Model::class, inversedBy="cars")
      * @ORM\JoinColumn(nullable=false)
      */
-    private ?Model $model = null;
-
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getModel(): ?Model
-    {
-        return $this->model;
-    }
-
-    public function setModel(?Model $model): self
-    {
-        $this->model = $model;
-
-        return $this;
-    }
+    public ?Model $model = null;
 }

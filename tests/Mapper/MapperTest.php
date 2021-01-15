@@ -15,7 +15,7 @@ namespace Soyuka\ESQL\Tests;
 
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
-use Soyuka\ESQL\Mapper\Mapper;
+use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -31,8 +31,22 @@ class MapperTest extends KernelTestCase
         ESQL::getAlias(Car::class);
         ESQL::getAlias(Model::class);
 
-        $mapper = new Mapper($autoMapper, $registry);
-        dump($mapper->map([
+        $model = new Model();
+        $model->id = 1;
+        $model->name = 'Volkswagen';
+
+        $car = new Car();
+        $car->id = 1;
+        $car->name = 'Caddy';
+        $car->model = $model;
+
+        $car2 = new Car();
+        $car2->id = 2;
+        $car2->name = 'Passat';
+        $car2->model = $model;
+
+        $mapper = new ESQLMapper($autoMapper, $registry);
+        $this->assertEquals([$car, $car2], $mapper->map([
             ['car_id' => '1', 'car_name' => 'Caddy', 'model_id' => '1', 'model_name' => 'Volkswagen'],
             ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],
         ], Car::class));

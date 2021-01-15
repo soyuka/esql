@@ -30,6 +30,13 @@ interface ESQLInterface
     public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string;
 
     /**
+     * Retrieves a column for a given resource.
+     *
+     * @param object|string $objectOrClass
+     */
+    public function column($objectOrClass, string $fieldName): ?string;
+
+    /**
      * Retrieves identifiers predicate, for example id = :id.
      *
      * @param object|string $objectOrClass

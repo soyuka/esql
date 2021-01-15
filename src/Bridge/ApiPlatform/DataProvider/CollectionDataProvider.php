@@ -22,8 +22,6 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
-use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
-use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 
 final class CollectionDataProvider implements RestrictedDataProviderInterface, CollectionDataProviderInterface, ContextAwareCollectionDataProviderInterface
 {
@@ -55,8 +53,7 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
         ['table' => $Table, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = $this->eSQL;
 
         $query = <<<SQL
-        SELECT {$Columns(Car::class)}, {$Columns(Model::class)} FROM {$Table($resourceClass)}
-        INNER JOIN {$Table(Model::class)} ON {$JoinPredicate(Car::class, Model::class)}
+        SELECT {$Columns($resourceClass)} FROM {$Table($resourceClass)}
 SQL;
 
         $parameters = [];
@@ -71,7 +68,7 @@ SQL;
         }
 
         $stmt = $connection->prepare($query);
-        $stmt->execute();
+        $stmt->execute($parameters);
         $data = $stmt->fetchAll();
 
         return $this->mapper->map($data, $resourceClass);

@@ -44,6 +44,17 @@ final class ESQL extends Base
         return implode($glue, array_map(fn ($value) => $alias.'.'.$value['columnName'].' as '.$alias.'_'.$value['columnName'], $fields));
     }
 
+    public function column($objectOrClass, string $fieldName): ?string
+    {
+        $metadata = $this->getClassMetadata($objectOrClass);
+        $fieldMapping = $metadata->fieldMappings[$fieldName] ?? null;
+        if (!$fieldMapping) {
+            return null;
+        }
+
+        return $this->getAlias($objectOrClass).'.'.$fieldMapping['columnName'];
+    }
+
     public function identifierPredicate($objectOrClass): string
     {
         $metadata = $this->getClassMetadata($objectOrClass);

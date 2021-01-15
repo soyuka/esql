@@ -36,6 +36,8 @@ abstract class ESQL implements ESQLInterface
      */
     abstract public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string;
 
+    abstract public function column($objectOrClass, string $fieldName): ?string;
+
     /**
      * Retrieves identifiers predicate, for example id = :id.
      *
@@ -75,6 +77,7 @@ abstract class ESQL implements ESQLInterface
         return $this->closures = [
             'table' => $this->makeClosure('table'),
             'columns' => $this->makeClosure('columns'),
+            'column' => $this->makeClosure('column'),
             'parameters' => $this->makeClosure('parameters'),
             'identifierPredicate' => $this->makeClosure('identifierPredicate'),
             'joinPredicate' => $this->makeClosure('joinPredicate'),
