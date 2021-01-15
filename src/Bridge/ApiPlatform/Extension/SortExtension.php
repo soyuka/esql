@@ -13,44 +13,34 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
-use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\ESQLInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class SortExtension implements QueryCollectionExtensionInterface
 {
-    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
     private RequestStack $requestStack;
     private ESQLInterface $esql;
+    private ManagerRegistry $managerRegistry;
 
-    public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, RequestStack $requestStack, ESQLInterface $esql)
+    public const ORDER_ASC = 'asc';
+    public const ORDER_DESC = 'desc';
+    public const NULLS_FIRST = 'nullsfirst';
+    public const NULLS_LAST = 'nullslast';
+    public const PARAMETER_NAME = 'sort';
+
+    public function __construct(RequestStack $requestStack, ESQLInterface $esql, ManagerRegistry $managerRegistry)
     {
-        $this->resourceMetadataFactory = $resourceMetadataFactory;
         $this->requestStack = $requestStack;
         $this->esql = $esql;
-    }
-
-    private function getPredicate(?string $predicate = null): ?string
-    {
-        if (null === $predicate) {
-            return null;
-        }
-        switch ($predicate) {
-            case 'asc':
-            case 'desc':
-            case 'nullsfirst':
-            case 'nullslast':
-                return $predicate;
-            default:
-                return 'asc';
-        }
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        if (null === $request || !$request->query->has('sort') || null === $sort = $request->query->get('sort')) {
+        if (null === $request || !$request->query->has(self::PARAMETER_NAME) || null === $sort = $request->query->get(self::PARAMETER_NAME)) {
             return [$query, $parameters];
         }
 
@@ -66,27 +56,58 @@ final class SortExtension implements QueryCollectionExtensionInterface
                 continue;
             }
 
-            $direction = $this->getPredicate($parts[1] ?? 'asc');
+            $direction = $this->getPredicate($parts[1] ?? self::ORDER_ASC);
             $nulls = null;
             if ($direction && 0 === strpos($direction, 'nulls')) {
                 $nulls = $direction;
-                $direction = 'asc';
+                $direction = self::ORDER_ASC;
             }
 
             $nulls = $nulls ?? $this->getPredicate($parts[2] ?? null);
 
-            if ($nulls) {
-                $orderClauses[] = "{$column} ".('nullslast' === $nulls ? 'IS NULL' : 'IS NOT NULL');
+            foreach ($this->getOrderClause($column, $direction ?? self::ORDER_ASC, $nulls) as $orderClause) {
+                $orderClauses[] = $orderClause;
             }
-
-            $orderClauses[] = "{$column} {$direction}";
         }
 
         return [$orderClauses ? $query.' ORDER BY '.implode(', ', $orderClauses) : $query, $parameters];
     }
 
+    private function getPredicate(?string $predicate = null): ?string
+    {
+        if (null === $predicate) {
+            return null;
+        }
+
+        switch ($predicate) {
+            case self::ORDER_ASC:
+            case self::ORDER_DESC:
+            case self::NULLS_FIRST:
+            case self::NULLS_LAST:
+                return $predicate;
+            default:
+                return self::ORDER_ASC;
+        }
+    }
+
+    private function getOrderClause(string $column, string $direction, ?string $nulls): iterable
+    {
+        switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
+            case 'pdo_pgsql':
+                yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
+                break;
+            case 'pdo_sqlite':
+            default:
+                if ($nulls) {
+                    yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
+                }
+
+                yield "{$column} {$direction}";
+        }
+    }
+
     public function supports(string $resourceClass, ?string $operationName = null, array $context = []): bool
     {
-        return null !== $this->resourceMetadataFactory->create($resourceClass)->getAttribute('order');
+        return true;
     }
 }

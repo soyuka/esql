@@ -132,8 +132,8 @@ class DataPaginator
 
         if ($statement->order) {
             $groups = [];
-            foreach ($statement->order as $i => $order) {
-                $groups = new GroupKeyword($order->expr);
+            foreach ($statement->order as $order) {
+                $groups[] = new GroupKeyword($order->expr);
             }
 
             /** @var OrderKeyword[] */

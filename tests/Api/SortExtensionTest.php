@@ -35,6 +35,13 @@ final class SortExtensionTest extends ApiTestCase
 
     public function testGetCollectionSortByNameAndColor(): void
     {
+        $response = static::createClient()->request('GET', '/cars?sort=name.asc,color.desc');
+        $this->assertResponseIsSuccessful();
+        $this->assertEquals('a', $response->toArray()['hydra:member'][0]['name'][0]);
+    }
+
+    public function testGetCollectionSortByNameAndColorNulls(): void
+    {
         $response = static::createClient()->request('GET', '/cars?sort=color.asc.nullsfirst');
         $this->assertResponseIsSuccessful();
         $this->assertNull($response->toArray()['hydra:member'][0]['color']);
