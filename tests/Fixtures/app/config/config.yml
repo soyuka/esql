@@ -6,16 +6,6 @@ framework:
     router:
         utf8:                           true
 
-doctrine:
-    dbal:
-        driver:                       'pdo_sqlite'
-        path:                         '%kernel.cache_dir%/db.sqlite'
-        charset:                      'UTF8'
-
-    orm:
-        auto_generate_proxy_classes:   '%kernel.debug%'
-        auto_mapping:                  true
-
 hautelook_alice:
     fixtures_path: 'fixtures' # Path to which to look for fixtures relative to the project directory or the bundle path. May be a string or an array of strings.
     root_dirs:

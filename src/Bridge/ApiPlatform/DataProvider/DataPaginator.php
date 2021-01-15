@@ -21,6 +21,8 @@ use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
 use LogicException;
 use PhpMyAdmin\SqlParser\Components\Expression;
+use PhpMyAdmin\SqlParser\Components\GroupKeyword;
+use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 use Soyuka\ESQL\ESQLMapperInterface;
@@ -116,6 +118,8 @@ class DataPaginator
     protected function count(string $query): float
     {
         $connection = $this->managerRegistry->getConnection();
+
+        Context::setMode('NO_ENCLOSING_QUOTES');
         $parser = new Parser($query);
         $statement = $parser->statements[0];
 
@@ -123,11 +127,17 @@ class DataPaginator
             throw new LogicException('No select statement found, can not count.');
         }
 
-        $statement->expr[0] = new Expression('COUNT(1)', '_esql_count');
+        $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
+
+        if ($statement->order) {
+            foreach ($statement->order as $order) {
+                $statement->group[] = new GroupKeyword($order->expr);
+            }
+        }
+
         $stmt = $connection->prepare($statement->build());
         $stmt->execute();
         ['_esql_count' => $totalItems] = $stmt->fetch();
-
         return (float) $totalItems;
     }
 

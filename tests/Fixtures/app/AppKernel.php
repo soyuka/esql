@@ -57,6 +57,13 @@ class AppKernel extends Kernel
 
         $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Bridge/Symfony/Bundle/Resources/config/openapi.xml');
         $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Bridge/Symfony/Bundle/Resources/config/json_schema.xml');
-        $loader->load(__DIR__.'/config/config.yml');
+
+        switch ($_SERVER['ESQL_DB'] ?? null) {
+            case 'postgres':
+                $loader->load(__DIR__.'/config/config_postgres.yml');
+                break;
+            default:
+                $loader->load(__DIR__.'/config/config_sqlite.yml');
+        }
     }
 }

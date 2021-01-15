@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    env:
+      PHP_CS_FIXER_FUTURE_MODE: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, bcmath, curl, openssl, mbstring 
+          ini-values: memory_limit=-1
+          tools: pecl, composer, php-cs-fixer
+          coverage: none
+      - name: Run PHP-CS-Fixer fix
+        run: php-cs-fixer fix --dry-run --diff --ansi
+
+  psalm:
+    name: Psalm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: pecl, composer
+          extensions: intl, bcmath, curl, openssl, mbstring
+          coverage: none
+          ini-values: memory_limit=-1
+      - name: Get composer cache directory
+        id: composercache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composercache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Update project dependencies
+        run: composer update --no-interaction --no-progress --ansi
+      - name: Run psalm analysis
+        run: ./vendor/bin/psalm
+
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+          - '8.0'
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: pecl, composer
+          extensions: intl, bcmath, curl, openssl, mbstring 
+          ini-values: memory_limit=-1
+      - name: Get composer cache directory
+        id: composercache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composercache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Set Composer platform config
+        if: (startsWith(matrix.php, '8.0'))
+        run: |
+            composer config platform.php 7.4.99
+      - name: Update project dependencies
+        run: composer update --no-interaction --no-progress --ansi
+      - name: Install PHPUnit
+        run: vendor/bin/simple-phpunit --version
+      - name: Clear test app cache
+        if: (!startsWith(matrix.php, '8.0'))
+        run: tests/Fixtures/app/console cache:clear --ansi
+      - name: Clear test app cache (php 8.0)
+        if: (startsWith(matrix.php, '8.0'))
+        run: rm -Rf tests/Fixtures/app/var/cache/*
+      - name: Run PHPUnit tests
+        run: vendor/bin/simple-phpunit
+
+  postgresql:
+    name: Behat (PHP ${{ matrix.php }}) (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    env:
+      ESQL_DB: postgres
+      DATABASE_URL: postgres://api_platform:apiplatformrocks@localhost/api_platform_test
+      PGPASSWORD: apiplatformrocks
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup postgres
+        run: |
+          sudo systemctl start postgresql
+          sudo -u postgres psql -d template1 -c "CREATE USER api_platform WITH PASSWORD 'apiplatformrocks' CREATEDB"
+          createdb -h localhost -p 5432 -U api_platform api_platform_test
+          pg_isready -d api_platform_test -h localhost -p 5432 -U api_platform
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: pecl, composer
+          extensions: intl, bcmath, curl, openssl, mbstring, pdo_pgsql
+          coverage: none
+          ini-values: memory_limit=-1
+      - name: Get composer cache directory
+        id: composercache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composercache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Update project dependencies
+        run: composer update --no-interaction --no-progress --ansi
+      - name: Require Symfony Uid
+        run: composer require symfony/uid --dev --no-interaction --no-progress --ansi
+      - name: Install PHPUnit
+        run: vendor/bin/simple-phpunit --version
+      - name: Clear test app cache
+        run: tests/Fixtures/app/console cache:clear --ansi
+      - name: Run PHPUnit tests
+        run: vendor/bin/simple-phpunit

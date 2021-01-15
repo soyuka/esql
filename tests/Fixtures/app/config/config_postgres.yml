@@ -1,0 +1,18 @@
+imports:
+    - { resource: config.yml }
+
+parameters:
+    env(DATABASE_URL): postgres://esql:password@localhost/esql_test
+    env(POSTGRES_VERSION): '12'
+
+doctrine:
+    dbal:
+        driver: pdo_pgsql
+        url: '%env(resolve:DATABASE_URL)%'
+        path: ~
+        server_version: '%env(POSTGRES_VERSION)%'
+
+    orm:
+        auto_generate_proxy_classes:   '%kernel.debug%'
+        auto_mapping:                  true
+
