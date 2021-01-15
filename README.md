@@ -21,4 +21,6 @@ var_dump($stmt->fetch());
 
 ## API Platform bridge
 
-This package comes with an API Platform bridge that supports filters and pagination. If you register the bundle we will override the default DataProvider and DataPersister. This bridge will use [`janephp/automapper`](https://github.com/janephp/automapper) to map data to your classes.
+This package comes with an API Platform bridge that supports filters and pagination. If you register the bundle we will override the default DataProvider. This bridge will use [`janephp/automapper`](https://github.com/janephp/automapper) to map data to your classes.
+
+Note: Persistence is NOT SUPPORTED yet. Just use Doctrine as it behaves just fine for this.
