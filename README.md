@@ -10,13 +10,18 @@ use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 
 $connection = $managerRegistry->getConnection();
 $esql = new ESQL($managerRegistry)
-['table' => $table, 'identifier' => $identifierPredicate, 'columns' => $columns, 'join' => $joinPredicate] = $esql(Car::class);
+[
+  'table' => $table,
+  'identifier' => $identifier,
+  'columns' => $columns,
+  'join' => $join
+] = $esql(Car::class);
 ['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
 
 $query = <<<SQL
 SELECT {$columns()}, {$modelColumns()} FROM {$table} 
-INNER JOIN {$modelTable} ON {$joinPredicate(Model::class)}
-WHERE {$identifierPredicate()}
+INNER JOIN {$modelTable} ON {$join(Model::class)}
+WHERE {$identifier()}
 SQL;
 
 $stmt = $connection->prepare($query);
