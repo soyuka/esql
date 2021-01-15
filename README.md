@@ -8,16 +8,32 @@ use App\Car;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 
 $connection = $managerRegistry->getConnection();
-['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = new ESQL($managerRegistry)();
+['table' => $Table, 'identifierPredicate' => $IdentifierPredicate, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = new ESQL($managerRegistry)();
 
 $query = <<<SQL
-SELECT * FROM {$Table(Car::class)} WHERE {$IdentifierPredicate(Car::class)}
+SELECT {$Columns(Car::class)} FROM {$Table(Car::class)} 
+INNER JOIN {$Table(Model::class)} ON {$JoinPredicate(Car::class, Model::class)}
+WHERE {$IdentifierPredicate(Car::class)}
 SQL;
 
 $stmt = $connection->prepare($query);
 $stmt->execute(['id' => 1]);
 var_dump($stmt->fetch());
 ```
+
+To map SQL data to objects ESQL uses janephp/automapper and Doctrine metadata:
+
+```php
+<?php
+use App\Car;
+use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
+
+/** $autoMapper is janephp/automapper **/
+$mapper = new ESQLMapper($autoMapper, $managerRegistry);
+var_dump($mapper->map($stmt->fetch(), Car::class));
+```
+
+It supports relations see [MapperTest](https://github.com/soyuka/esql/blob/main/tests/Mapper/MapperTest.php).
 
 ## API Platform bridge
 
