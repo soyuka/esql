@@ -22,6 +22,7 @@ use InvalidArgumentException;
 use LogicException;
 use PhpMyAdmin\SqlParser\Components\Expression;
 use PhpMyAdmin\SqlParser\Components\GroupKeyword;
+use PhpMyAdmin\SqlParser\Components\OrderKeyword;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
@@ -130,14 +131,19 @@ class DataPaginator
         $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
         if ($statement->order) {
-            foreach ($statement->order as $order) {
-                $statement->group[] = new GroupKeyword($order->expr);
+            $groups = [];
+            foreach ($statement->order as $i => $order) {
+                $groups = new GroupKeyword($order->expr);
             }
+
+            /** @var OrderKeyword[] */
+            $statement->group = $groups;
         }
 
         $stmt = $connection->prepare($statement->build());
         $stmt->execute();
         ['_esql_count' => $totalItems] = $stmt->fetch();
+
         return (float) $totalItems;
     }
 
