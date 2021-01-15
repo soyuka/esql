@@ -1,6 +1,6 @@
 # PHP Extended SQL
 
-PHP Extended SQL is an alternative to the famous DQL (Doctrine Query Language). It combines the flexibility of SQL with the powerful Doctrine metadata to give you more control over queries.
+PHP Extended SQL is an alternative to the also-known DQL (Doctrine Query Language). It combines the flexibility of SQL with the powerful Doctrine metadata to give you more control over queries.
 
 ```php
 <?php
