@@ -41,10 +41,10 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
     public function getItem(string $resourceClass, $id, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($resourceClass);
+        ['table' => $table, 'identifierPredicate' => $identifierPredicate] = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT * FROM {$Table($resourceClass)} WHERE {$IdentifierPredicate($resourceClass)}
+        SELECT * FROM {$table} WHERE {$identifierPredicate()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($id);

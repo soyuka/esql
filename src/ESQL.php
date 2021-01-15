@@ -16,7 +16,7 @@ namespace Soyuka\ESQL;
 use ReflectionClass;
 
 /**
- * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifierPredicate: \Closure, joinPredicate: \Closure, parameters: \Closure, predicates: \Closure, table: \Closure}[]
+ * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifierPredicate: \Closure, joinPredicate: \Closure, parameters: \Closure, predicates: \Closure, table: string}[]
  */
 abstract class ESQL implements ESQLInterface
 {
@@ -105,23 +105,22 @@ abstract class ESQL implements ESQLInterface
         }
 
         $that = clone $this;
+        $that->class = $class;
+        $that->metadata = $this->getClassMetadata($class);
 
         return $this->closures[$class] = [
-            'table' => $this->makeClosure('table', $that, $class),
+            'table' => $that->table(),
             'columns' => $this->makeClosure('columns', $that, $class),
             'column' => $this->makeClosure('column', $that, $class),
-            'parameters' => $this->makeClosure('parameters', $that, $class),
             'identifierPredicate' => $this->makeClosure('identifierPredicate', $that, $class),
             'joinPredicate' => $this->makeClosure('joinPredicate', $that, $class),
             'predicates' => $this->makeClosure('predicates', $that, $class),
+            'parameters' => $this->makeClosure('parameters', $that, $class),
         ];
     }
 
     private function makeClosure(string $method, self $that, string $class): \Closure
     {
-        $that->class = $class;
-        $that->metadata = $this->getClassMetadata($class);
-
         return fn (): string => (string) \call_user_func_array([$that, $method], \func_get_args());
     }
 }

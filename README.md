@@ -5,16 +5,18 @@ PHP Extended SQL is an alternative to the also-known DQL (Doctrine Query Languag
 ```php
 <?php
 use App\Car;
+use App\Model;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 
 $connection = $managerRegistry->getConnection();
 $esql = new ESQL($managerRegistry)
-['table' => $Table, 'identifierPredicate' => $IdentifierPredicate, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = $esql(Car::class);
+['table' => $table, 'identifierPredicate' => $identifierPredicate, 'columns' => $columns, 'joinPredicate' => $joinPredicate] = $esql(Car::class);
+['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
 
 $query = <<<SQL
-SELECT {$Columns()} FROM {$Table()} 
-INNER JOIN {$Table()} ON {$JoinPredicate(Model::class)}
-WHERE {$IdentifierPredicate()}
+SELECT {$columns()}, $modelColumns FROM {$table} 
+INNER JOIN {$modelTable} ON {$joinPredicate(Model::class)}
+WHERE {$identifierPredicate()}
 SQL;
 
 $stmt = $connection->prepare($query);

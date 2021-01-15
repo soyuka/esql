@@ -44,7 +44,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
             return [$query, $parameters];
         }
 
-        ['column' => $Column] = $this->esql->__invoke($resourceClass);
+        ['column' => $getColumn] = $this->esql->__invoke($resourceClass);
         $orderClauses = [];
 
         foreach (explode(',', $sort) as $sortPredicate) {
@@ -52,7 +52,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
             $property = $parts[0] ?? null;
 
             // invalid property
-            if (!$property || !($column = $Column($property))) {
+            if (!$property || !($column = $getColumn($property))) {
                 continue;
             }
 
