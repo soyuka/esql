@@ -14,7 +14,7 @@ $esql = new ESQL($managerRegistry)
 ['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
 
 $query = <<<SQL
-SELECT {$columns()}, $modelColumns FROM {$table} 
+SELECT {$columns()}, {$modelColumns()} FROM {$table} 
 INNER JOIN {$modelTable} ON {$joinPredicate(Model::class)}
 WHERE {$identifierPredicate()}
 SQL;
