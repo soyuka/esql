@@ -16,7 +16,7 @@ namespace Soyuka\ESQL;
 use ReflectionClass;
 
 /**
- * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifierPredicate: \Closure, joinPredicate: \Closure, parameters: \Closure, predicates: \Closure, table: string}[]
+ * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifier: \Closure, join: \Closure, parameters: \Closure, predicates: \Closure, table: string}[]
  */
 abstract class ESQL implements ESQLInterface
 {
