@@ -112,8 +112,8 @@ abstract class ESQL implements ESQLInterface
             'table' => $that->table(),
             'columns' => $this->makeClosure('columns', $that, $class),
             'column' => $this->makeClosure('column', $that, $class),
-            'identifierPredicate' => $this->makeClosure('identifierPredicate', $that, $class),
-            'joinPredicate' => $this->makeClosure('joinPredicate', $that, $class),
+            'identifier' => $this->makeClosure('identifierPredicate', $that, $class),
+            'join' => $this->makeClosure('joinPredicate', $that, $class),
             'predicates' => $this->makeClosure('predicates', $that, $class),
             'parameters' => $this->makeClosure('parameters', $that, $class),
         ];

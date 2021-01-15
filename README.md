@@ -10,7 +10,7 @@ use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 
 $connection = $managerRegistry->getConnection();
 $esql = new ESQL($managerRegistry)
-['table' => $table, 'identifierPredicate' => $identifierPredicate, 'columns' => $columns, 'joinPredicate' => $joinPredicate] = $esql(Car::class);
+['table' => $table, 'identifier' => $identifierPredicate, 'columns' => $columns, 'join' => $joinPredicate] = $esql(Car::class);
 ['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
 
 $query = <<<SQL
