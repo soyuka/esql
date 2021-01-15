@@ -10,14 +10,16 @@
  */
 
 declare(strict_types=1);
-// api/tests/BooksTest.php
 
-namespace App\Tests;
+namespace App\Tests\Api;
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 
-class ApiCollectionTest extends ApiTestCase
+/**
+ * @psalm-suppress MissingDependency
+ */
+final class CollectionTest extends ApiTestCase
 {
     use RefreshDatabaseTrait;
 
@@ -57,28 +59,5 @@ class ApiCollectionTest extends ApiTestCase
                 'hydra:next' => '/cars?page=3',
             ],
         ]);
-    }
-
-    public function testGetCollectionSortByName(): void
-    {
-        $response = static::createClient()->request('GET', '/cars?sort=name.asc');
-        $this->assertResponseIsSuccessful();
-        $this->assertEquals('a', $response->toArray()['hydra:member'][0]['name'][0]);
-        $response = static::createClient()->request('GET', '/cars?sort=name.desc');
-        $this->assertResponseIsSuccessful();
-        $this->assertEquals('c', $response->toArray()['hydra:member'][0]['name'][0]);
-    }
-
-    public function testGetCollectionSortByNameAndColor(): void
-    {
-        $response = static::createClient()->request('GET', '/cars?sort=color.asc.nullsfirst');
-        $this->assertResponseIsSuccessful();
-        $this->assertNull($response->toArray()['hydra:member'][0]['color']);
-        $response = static::createClient()->request('GET', '/cars?sort=color.asc.nullslast');
-        $this->assertResponseIsSuccessful();
-        $this->assertIsString($response->toArray()['hydra:member'][0]['color']);
-        $response = static::createClient()->request('GET', '/cars?sort=name.asc,color.nullsfirst');
-        $this->assertResponseIsSuccessful();
-        $this->assertEquals('a', $response->toArray()['hydra:member'][0]['name'][0]);
     }
 }

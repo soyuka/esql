@@ -10,14 +10,16 @@
  */
 
 declare(strict_types=1);
-// api/tests/BooksTest.php
 
 namespace App\Tests;
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 
-class ApiTest extends ApiTestCase
+/**
+ * @psalm-suppress MissingDependency
+ */
+final class ItemTest extends ApiTestCase
 {
     use RefreshDatabaseTrait;
 

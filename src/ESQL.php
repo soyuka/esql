@@ -15,50 +15,47 @@ namespace Soyuka\ESQL;
 
 use ReflectionClass;
 
+/**
+ * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifierPredicate: \Closure, joinPredicate: \Closure, parameters: \Closure, predicates: \Closure, table: \Closure}[]
+ */
 abstract class ESQL implements ESQLInterface
 {
-    private ?array $closures = null;
+    /** @psalm-var InvokeType[] */
+    private array $closures = [];
     private static array $aliases = [];
     private static array $countAliases = [];
     private static array $classAliases = [];
 
+    /** @var mixed */
+    protected $metadata = null;
+    protected string $class = '';
+
     /**
      * Retrieves the Table name for the given resource.
-     *
-     * @param object|string $objectOrClass
      */
-    abstract public function table($objectOrClass): string;
+    abstract public function table(): string;
 
     /**
      * Retrieves columns for a given resource.
-     *
-     * @param object|string $objectOrClass
      */
-    abstract public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string;
+    abstract public function columns(?array $fields = null, string $glue = ', '): string;
 
-    abstract public function column($objectOrClass, string $fieldName): ?string;
+    abstract public function column(string $fieldName): ?string;
 
     /**
      * Retrieves identifiers predicate, for example id = :id.
-     *
-     * @param object|string $objectOrClass
      */
-    abstract public function identifierPredicate($objectOrClass): string;
+    abstract public function identifierPredicate(): string;
 
     /**
      * Retrieves join predicate, for example car.model_id = model.id.
-     *
-     * @param object|string $objectOrClass
-     * @param object|string $relationObjectOrClass
      */
-    abstract public function joinPredicate($objectOrClass, $relationObjectOrClass): string;
+    abstract public function joinPredicate(string $relationClass): string;
 
     /**
      * Retrieves identifiers predicate, for example foo = :foo.
-     *
-     * @param object|string $objectOrClass
      */
-    abstract public function predicates($objectOrClass, ?array $fields = null, string $glue = ', '): string;
+    abstract public function predicates(?array $fields = null, string $glue = ', '): string;
 
     /**
      * Retrieves a list of binded parameters.
@@ -66,23 +63,6 @@ abstract class ESQL implements ESQLInterface
     public function parameters(array $bindings): string
     {
         return ':'.implode(', :', array_keys($bindings));
-    }
-
-    public function __invoke(): array
-    {
-        if ($this->closures) {
-            return $this->closures;
-        }
-
-        return $this->closures = [
-            'table' => $this->makeClosure('table'),
-            'columns' => $this->makeClosure('columns'),
-            'column' => $this->makeClosure('column'),
-            'parameters' => $this->makeClosure('parameters'),
-            'identifierPredicate' => $this->makeClosure('identifierPredicate'),
-            'joinPredicate' => $this->makeClosure('joinPredicate'),
-            'predicates' => $this->makeClosure('predicates'),
-        ];
     }
 
     /**
@@ -112,8 +92,36 @@ abstract class ESQL implements ESQLInterface
         return self::$classAliases[$alias];
     }
 
-    private function makeClosure(string $method): \Closure
+    /**
+     * @param object|string $objectOrClass
+     *
+     * @psalm-return InvokeType
+     */
+    public function __invoke($objectOrClass): array
     {
-        return fn (): string => (string) \call_user_func_array([$this, $method], \func_get_args());
+        $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
+        if (isset($this->closures[$class])) {
+            return $this->closures[$class];
+        }
+
+        $that = clone $this;
+
+        return $this->closures[$class] = [
+            'table' => $this->makeClosure('table', $that, $class),
+            'columns' => $this->makeClosure('columns', $that, $class),
+            'column' => $this->makeClosure('column', $that, $class),
+            'parameters' => $this->makeClosure('parameters', $that, $class),
+            'identifierPredicate' => $this->makeClosure('identifierPredicate', $that, $class),
+            'joinPredicate' => $this->makeClosure('joinPredicate', $that, $class),
+            'predicates' => $this->makeClosure('predicates', $that, $class),
+        ];
+    }
+
+    private function makeClosure(string $method, self $that, string $class): \Closure
+    {
+        $that->class = $class;
+        $that->metadata = $this->getClassMetadata($class);
+
+        return fn (): string => (string) \call_user_func_array([$that, $method], \func_get_args());
     }
 }

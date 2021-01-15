@@ -21,7 +21,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ApiResource
  * @ORM\Entity(repositoryClass=CarRepository::class)
  */
-final class Car
+class Car
 {
     /**
      * @ORM\Id

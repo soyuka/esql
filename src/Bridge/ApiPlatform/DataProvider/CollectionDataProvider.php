@@ -27,16 +27,16 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
 {
     private ManagerRegistry $managerRegistry;
     private ESQLMapperInterface $mapper;
-    private array $eSQL;
+    private ESQLInterface $esql;
     private DataPaginator $dataPaginator;
     private iterable $collectionExtensions;
     private LoggerInterface $logger;
 
-    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $eSQL, DataPaginator $dataPaginator, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, DataPaginator $dataPaginator, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
     {
         $this->managerRegistry = $managerRegistry;
         $this->mapper = $mapper;
-        $this->eSQL = $eSQL();
+        $this->esql = $esql;
         $this->dataPaginator = $dataPaginator;
         $this->collectionExtensions = $collectionExtensions;
         $this->logger = $logger ?: new NullLogger();
@@ -50,10 +50,10 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $Table, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = $this->eSQL;
+        ['table' => $Table, 'columns' => $Columns, 'joinPredicate' => $JoinPredicate] = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT {$Columns($resourceClass)} FROM {$Table($resourceClass)}
+        SELECT {$Columns()} FROM {$Table()}
 SQL;
 
         $parameters = [];

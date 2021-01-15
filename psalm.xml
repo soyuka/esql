@@ -7,10 +7,19 @@
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
+    <issueHandlers>
+      <PropertyNotSetInConstructor>
+        <errorLevel type="suppress">
+          <directory name="tests/Fixtures/TestBundle/Entity" />
+        </errorLevel>
+      </PropertyNotSetInConstructor>
+    </issueHandlers>
     <projectFiles>
         <directory name="src" />
+        <directory name="tests" />
         <ignoreFiles>
             <directory name="vendor" />
+            <directory name="tests/Fixtures/app" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

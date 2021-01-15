@@ -23,7 +23,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ApiResource
  * @ORM\Entity(repositoryClass=ModelRepository::class)
  */
-final class Model
+class Model
 {
     /**
      * @ORM\Id

@@ -21,13 +21,13 @@ final class SortExtension implements QueryCollectionExtensionInterface
 {
     private ResourceMetadataFactoryInterface $resourceMetadataFactory;
     private RequestStack $requestStack;
-    private array $eSQL;
+    private ESQLInterface $esql;
 
-    public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, RequestStack $requestStack, ESQLInterface $eSQL)
+    public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, RequestStack $requestStack, ESQLInterface $esql)
     {
         $this->resourceMetadataFactory = $resourceMetadataFactory;
         $this->requestStack = $requestStack;
-        $this->eSQL = $eSQL();
+        $this->esql = $esql;
     }
 
     private function getPredicate(?string $predicate = null): ?string
@@ -54,7 +54,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
             return [$query, $parameters];
         }
 
-        ['column' => $Column] = $this->eSQL;
+        ['column' => $Column] = $this->esql->__invoke($resourceClass);
         $orderClauses = [];
 
         foreach (explode(',', $sort) as $sortPredicate) {
@@ -62,7 +62,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
             $property = $parts[0] ?? null;
 
             // invalid property
-            if (!$property || !($column = $Column($resourceClass, $property))) {
+            if (!$property || !($column = $Column($property))) {
                 continue;
             }
 

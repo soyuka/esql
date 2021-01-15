@@ -26,13 +26,13 @@ final class DataPersister implements DataPersisterInterface, ContextAwareDataPer
 
     private ManagerRegistry $managerRegistry;
     private AutoMapperInterface $automapper;
-    private array $eSQL;
+    private ESQLInterface $esql;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $eSQL)
+    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql)
     {
         $this->managerRegistry = $managerRegistry;
         $this->automapper = $automapper;
-        $this->eSQL = $eSQL();
+        $this->esql = $esql;
     }
 
     /**
@@ -40,18 +40,18 @@ final class DataPersister implements DataPersisterInterface, ContextAwareDataPer
      */
     public function persist($data, array $context = [])
     {
-        ['table' => $Table, 'columns' => $Columns, 'parameters' => $Parameters, 'predicates' => $Predicates, 'identifierPredicate' => $IdentifierPredicate] = $this->eSQL;
+        ['table' => $Table, 'columns' => $Columns, 'parameters' => $Parameters, 'predicates' => $Predicates, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
         $binding = $this->automapper->map($data, 'array');
 
         if ($context['previous_data'] ?? null) {
             $query = <<<SQL
-            UPDATE {$Table($data)} SET {$Predicates($data)}
-            WHERE {$IdentifierPredicate($data)}
+            UPDATE {$Table()} SET {$Predicates()}
+            WHERE {$IdentifierPredicate()}
 SQL;
         } else {
             $query = <<<SQL
-            INSERT INTO {$Table($data)} ({$Columns($data)}) VALUES ({$Parameters($binding)});
+            INSERT INTO {$Table()} ({$Columns()}) VALUES ({$Parameters($binding)});
 SQL;
         }
 
@@ -61,7 +61,7 @@ SQL;
         $connection->commit();
 
         $query = <<<SQL
-        SELECT * FROM {$Table($data)} WHERE {$IdentifierPredicate($data)}
+        SELECT * FROM {$Table()} WHERE {$IdentifierPredicate()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute(['id' => ($context['previous_data'] ?? null) ? $context['previous_data']->getId() : $connection->lastInsertId()]);
@@ -76,7 +76,7 @@ SQL;
      */
     public function remove($data, array $context = []): void
     {
-        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->eSQL;
+        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
         $connection->beginTransaction();
         $query = <<<SQL

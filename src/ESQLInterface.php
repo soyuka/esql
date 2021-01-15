@@ -17,56 +17,53 @@ interface ESQLInterface
 {
     /**
      * Retrieves the Table name for the given resource.
-     *
-     * @param object|string $objectOrClass
      */
-    public function table($objectOrClass): string;
+    public function table(): string;
 
     /**
      * Retrieves columns for a given resource.
-     *
-     * @param object|string $objectOrClass
      */
-    public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string;
+    public function columns(?array $fields = null, string $glue = ', '): string;
 
     /**
      * Retrieves a column for a given resource.
-     *
-     * @param object|string $objectOrClass
      */
-    public function column($objectOrClass, string $fieldName): ?string;
+    public function column(string $fieldName): ?string;
 
     /**
      * Retrieves identifiers predicate, for example id = :id.
-     *
-     * @param object|string $objectOrClass
      */
-    public function identifierPredicate($objectOrClass): string;
+    public function identifierPredicate(): string;
 
     /**
      * Retrieves join predicate, for example car.model_id = model.id.
-     *
-     * @param object|string $objectOrClass
-     * @param object|string $relationObjectOrClass
      */
-    public function joinPredicate($objectOrClass, $relationObjectOrClass): string;
+    public function joinPredicate(string $relationClass): string;
 
     /**
      * Retrieves identifiers predicate, for example foo = :foo.
-     *
-     * @param object|string $objectOrClass
      */
-    public function predicates($objectOrClass, ?array $fields = null, string $glue = ', '): string;
+    public function predicates(?array $fields = null, string $glue = ', '): string;
 
     /**
      * Retrieves a list of binded parameters.
+     * more a helper for persistence not used.
      */
     public function parameters(array $bindings): string;
 
     /**
      * Get closures to ease HEREDOC calls.
+     *
+     * @param object|string $objectOrClass
      */
-    public function __invoke(): array;
+    public function __invoke($objectOrClass): array;
+
+    /**
+     * Get class metadata.
+     *
+     * @return mixed
+     */
+    public function getClassMetadata(string $class);
 
     /**
      * Get the class alias.

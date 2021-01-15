@@ -20,6 +20,9 @@ use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
+/**
+ * @psalm-suppress MissingDependency
+ */
 class MapperTest extends KernelTestCase
 {
     public function testMapCar(): void

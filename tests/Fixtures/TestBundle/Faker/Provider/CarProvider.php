@@ -15,9 +15,13 @@ namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Faker\Provider;
 
 use Faker\Provider\Base;
 
+/**
+ * @psalm-suppress MissingDependency,
+ * @psalm-suppress PropertyNotSetInConstructor
+ */
 final class CarProvider extends Base
 {
-    public static function carName($startWith)
+    public static function carName(string $startWith): string
     {
         $name = $startWith;
         for ($i = 0; $i < static::numberBetween(5, 10); ++$i) {

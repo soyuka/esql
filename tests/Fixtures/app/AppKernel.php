@@ -46,6 +46,9 @@ class AppKernel extends Kernel
         return __DIR__;
     }
 
+    /**
+     * @param \Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator|\Symfony\Component\Routing\RouteCollectionBuilder $routes
+     */
     protected function configureRoutes($routes): void
     {
         $routes->import(__DIR__.'/config/routing.yml');

@@ -24,13 +24,13 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
 {
     private ManagerRegistry $managerRegistry;
     private AutoMapperInterface $automapper;
-    private array $eSQL;
+    private ESQLInterface $esql;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $eSQL)
+    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql)
     {
         $this->managerRegistry = $managerRegistry;
         $this->automapper = $automapper;
-        $this->eSQL = $eSQL();
+        $this->esql = $esql;
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
@@ -41,7 +41,7 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
     public function getItem(string $resourceClass, $id, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->eSQL;
+        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
         SELECT * FROM {$Table($resourceClass)} WHERE {$IdentifierPredicate($resourceClass)}

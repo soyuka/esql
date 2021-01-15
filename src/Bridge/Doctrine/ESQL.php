@@ -27,49 +27,45 @@ final class ESQL extends Base
         $this->registry = $registry;
     }
 
-    public function table($objectOrClass): string
+    public function table(): string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-        $alias = $this->getAlias($objectOrClass);
+        $metadata = $this->getClassMetadata($this->class);
+        $alias = $this->getAlias($this->class);
 
         return $metadata->getTableName().' '.$alias;
     }
 
-    public function columns($objectOrClass, ?array $fields = null, string $glue = ', '): string
+    public function columns(?array $fields = null, string $glue = ', '): string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-        $fields = $fields ? array_intersect_key($metadata->fieldMappings, array_flip($fields)) : $metadata->fieldMappings;
-        $alias = $this->getAlias($objectOrClass);
+        /** @var mixed[] */
+        $fields = $fields ? array_intersect_key($this->metadata->fieldMappings, array_flip($fields)) : $this->metadata->fieldMappings;
+        $alias = $this->getAlias($this->class);
 
         return implode($glue, array_map(fn ($value) => $alias.'.'.$value['columnName'].' as '.$alias.'_'.$value['columnName'], $fields));
     }
 
-    public function column($objectOrClass, string $fieldName): ?string
+    public function column(string $fieldName): ?string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-        $fieldMapping = $metadata->fieldMappings[$fieldName] ?? null;
+        $fieldMapping = $this->metadata->fieldMappings[$fieldName] ?? null;
         if (!$fieldMapping) {
             return null;
         }
 
-        return $this->getAlias($objectOrClass).'.'.$fieldMapping['columnName'];
+        return $this->getAlias($this->class).'.'.$fieldMapping['columnName'];
     }
 
-    public function identifierPredicate($objectOrClass): string
+    public function identifierPredicate(): string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-
-        return $this->predicates($objectOrClass, $metadata->getIdentifierFieldNames(), ' AND ');
+        return $this->predicates($this->metadata->getIdentifierFieldNames(), ' AND ');
     }
 
-    public function joinPredicate($objectOrClass, $relationObjectOrClass): string
+    public function joinPredicate(string $relationClass): string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-        $alias = $this->getAlias($objectOrClass);
-        $relationMetadata = $this->getClassMetadata($relationObjectOrClass);
-        $relationAlias = $this->getAlias($relationObjectOrClass);
+        $alias = $this->getAlias($this->class);
+        $relationMetadata = $this->getClassMetadata($relationClass);
+        $relationAlias = $this->getAlias($relationClass);
 
-        foreach ($metadata->getAssociationMappings() as $association) {
+        foreach ($this->metadata->getAssociationMappings() as $association) {
             if ($association['targetEntity'] === $relationMetadata->name) {
                 $str = '';
                 foreach ($association['joinColumns'] as $i => $joinColumn) {
@@ -82,14 +78,13 @@ final class ESQL extends Base
             }
         }
 
-        throw new LogicException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
+        throw new LogicException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
     }
 
-    public function predicates($objectOrClass, ?array $fields = null, string $glue = ', '): string
+    public function predicates(?array $fields = null, string $glue = ', '): string
     {
-        $metadata = $this->getClassMetadata($objectOrClass);
-        $alias = $this->getAlias($objectOrClass);
-        $fields = $fields ? array_intersect_key($metadata->fieldMappings, array_flip($fields)) : $metadata->fieldMappings;
+        $alias = $this->getAlias($this->class);
+        $fields = $fields ? array_intersect_key($this->metadata->fieldMappings, array_flip($fields)) : $this->metadata->fieldMappings;
         $str = '';
         foreach ($fields as $fieldName => $field) {
             $str .= $str ? $glue : '';
@@ -99,15 +94,13 @@ final class ESQL extends Base
         return $str;
     }
 
-    /**
-     * @param object|string $objectOrClass
-     */
-    private function getClassMetadata($objectOrClass): ClassMetadataInfo
+    public function getClassMetadata(string $class)
     {
-        $manager = $this->registry->getManagerForClass($class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass));
+        $manager = $this->registry->getManagerForClass($class);
         if (!$manager) {
             throw new \RuntimeException('No manager for class '.$class);
         }
+
         $classMetadata = $manager->getClassMetadata($class);
         if (!$classMetadata instanceof ClassMetadataInfo) {
             throw new \RuntimeException('No class metadata for class '.$class);
