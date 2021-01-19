@@ -71,8 +71,8 @@ class FilterParserTest extends KernelTestCase
         ];
 
         yield [
-            'and(sold.is.true,or(sold.is.true,and(price.lte.100)))',
-            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price <= :price_1))', ['sold_1' => '1', 'sold_2' => '1', 'price_1' => '100']],
+            'and(sold.is.false,or(sold.is.true,and(price.lte.100)))',
+            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price <= :price_1))', ['sold_1' => '0', 'sold_2' => '1', 'price_1' => '100']],
         ];
 
         yield [
