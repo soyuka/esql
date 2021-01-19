@@ -112,24 +112,24 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
                     // The value is an array
                     if ($this->lexer->isNext(self::T_OPEN)) {
-                      $result .= "$columnValue $sqlOperator (";
-                      $this->lexer->moveNext();
-                      while(!$this->lexer->isNext(self::T_CLOSE)) {
-                        if ($this->lexer->isNext(self::T_COLON)) {
-                          $result .= ',';
-                          $this->lexer->moveNext();
-                        } else if ($this->lexer->isNext(self::T_VALUE)) {
-                          $result .= ":$uniqueParameterName";
-                          $parameters[$uniqueParameterName] = $this->match(self::T_VALUE);
-                          $uniqueParameterName = $this->uniqueParameterName($parameterName);
-                        } else {
-                          throw new InvalidArgumentException('Argument malformed');
+                        $result .= "$columnValue $sqlOperator (";
+                        $this->lexer->moveNext();
+                        while (!$this->lexer->isNext(self::T_CLOSE)) {
+                            if ($this->lexer->isNext(self::T_COLON)) {
+                                $result .= ',';
+                                $this->lexer->moveNext();
+                            } elseif ($this->lexer->isNext(self::T_VALUE)) {
+                                $result .= ":$uniqueParameterName";
+                                $parameters[$uniqueParameterName] = $this->match(self::T_VALUE);
+                                $uniqueParameterName = $this->uniqueParameterName($parameterName);
+                            } else {
+                                throw new InvalidArgumentException('Argument malformed');
+                            }
                         }
-                      }
 
-                      $result .= ')';
-                      $this->lexer->moveNext();
-                      continue;
+                        $result .= ')';
+                        $this->lexer->moveNext();
+                        continue;
                     }
 
                     $result .= "$columnValue $sqlOperator :$uniqueParameterName";
