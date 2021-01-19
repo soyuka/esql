@@ -109,7 +109,30 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                     [$parameterName, $columnValue] = $this->match(self::T_WORD);
                     $uniqueParameterName = $this->uniqueParameterName($parameterName);
                     $sqlOperator = $this->match(self::T_OPERATOR);
-                    $result .= "$columnValue ".$sqlOperator." :$uniqueParameterName";
+
+                    // The value is an array
+                    if ($this->lexer->isNext(self::T_OPEN)) {
+                      $result .= "$columnValue $sqlOperator (";
+                      $this->lexer->moveNext();
+                      while(!$this->lexer->isNext(self::T_CLOSE)) {
+                        if ($this->lexer->isNext(self::T_COLON)) {
+                          $result .= ',';
+                          $this->lexer->moveNext();
+                        } else if ($this->lexer->isNext(self::T_VALUE)) {
+                          $result .= ":$uniqueParameterName";
+                          $parameters[$uniqueParameterName] = $this->match(self::T_VALUE);
+                          $uniqueParameterName = $this->uniqueParameterName($parameterName);
+                        } else {
+                          throw new InvalidArgumentException('Argument malformed');
+                        }
+                      }
+
+                      $result .= ')';
+                      $this->lexer->moveNext();
+                      continue;
+                    }
+
+                    $result .= "$columnValue $sqlOperator :$uniqueParameterName";
                     $value = $this->match(self::T_VALUE);
                     if ('LIKE' === $sqlOperator || 'ILIKE' === $sqlOperator) {
                         $value = str_replace('*', '%', $value);

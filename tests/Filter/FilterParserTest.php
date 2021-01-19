@@ -71,13 +71,23 @@ class FilterParserTest extends KernelTestCase
         ];
 
         yield [
-            'and(sold.is.true,or(sold.is.true,and(price.gte.100)))',
-            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price >= :price_1))', ['sold_1' => '1', 'sold_2' => '1', 'price_1' => '100']],
+            'and(sold.is.true,or(sold.is.true,and(price.lte.100)))',
+            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price <= :price_1))', ['sold_1' => '1', 'sold_2' => '1', 'price_1' => '100']],
         ];
 
         yield [
             'and(sold.not.is.true,price.not.eq.10)',
             ['car.sold IS NOT :sold_1 AND car.price != :price_1', ['sold_1' => '1', 'price_1' => '10']],
+        ];
+
+        yield [
+            'and(name.in.(1,2,3))',
+            ['car.name IN (:name_1,:name_2,:name_3)', ['name_1' => '1', 'name_2' => '2', 'name_3' => '3']],
+        ];
+
+        yield [
+            'and(name.not.in.(a,b,c))',
+            ['car.name NOT IN (:name_1,:name_2,:name_3)', ['name_1' => 'a', 'name_2' => 'b', 'name_3' => 'c']],
         ];
     }
 }
