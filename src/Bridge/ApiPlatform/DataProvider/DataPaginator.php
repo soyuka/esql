@@ -161,7 +161,7 @@ class DataPaginator
         }
 
         if ($clientEnabled && $request) {
-            $enabled = filter_var($this->getPaginationParameter($request, $this->partialPaginationParameterName, $enabled), FILTER_VALIDATE_BOOLEAN);
+            $enabled = filter_var($this->getPaginationParameter($request, $this->partialPaginationParameterName, $enabled), \FILTER_VALIDATE_BOOLEAN);
         }
 
         return $enabled;
@@ -173,7 +173,7 @@ class DataPaginator
         $clientEnabled = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_client_enabled', $this->paginationOptions->getPaginationClientEnabled(), true);
 
         if ($clientEnabled) {
-            $enabled = filter_var($this->getPaginationParameter($request, $this->paginationOptions->getPaginationClientEnabledParameterName(), $enabled), FILTER_VALIDATE_BOOLEAN);
+            $enabled = filter_var($this->getPaginationParameter($request, $this->paginationOptions->getPaginationClientEnabledParameterName(), $enabled), \FILTER_VALIDATE_BOOLEAN);
         }
 
         return $enabled;
