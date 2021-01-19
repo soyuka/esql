@@ -22,7 +22,7 @@
     <filter>
       <whitelist processUncoveredFilesFromWhitelist="true">
         <directory suffix=".php">src</directory>
-        <exclude>src/Bridge/ApiPlatform/DataPersister/DataPersister.php</exclude>
+        <exclude><file>src/Bridge/ApiPlatform/DataPersister/DataPersister.php</file></exclude>
       </whitelist>
     </filter>
 
