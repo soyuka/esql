@@ -33,9 +33,9 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         parent::__construct(new SimpleLexer('/
             (and)|(or)
             | (\() | (\))
-            | (eq|gt|gte|lte|lt|neq|like|ilike|in|is|not\.eq|not\.gt|not\.gte|not\.lte|not\.lt|not\.neq|not\.like|not\.ilike|not\.in|not\.is)
+            | (gte|gt|lte|lt|neq|eq|ilike|like|in|is|not\.neq|not\.eq|not\.gte|not\.gt|not\.lte|not\.lt|not\.like|not\.ilike|not\.in|not\.is)
             | \.
-            | ([a-z0-9]+[^().,]*)
+            | ([a-zA-Z0-9*]+[^().,]*)
             | (,)
         /x',
             [
@@ -67,10 +67,11 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         $parameters = [];
         $openingParenthesis = -1;
         $closingParenthesis = -1;
+        $operator = '';
 
         while ($this->lexer->isNextAny([self::T_COLON, self::T_AND, self::T_OR, self::T_OPEN, self::T_CLOSE])) {
-            $operator = ' AND ';
             if ($this->lexer->isNext(self::T_AND)) {
+                $operator = ' AND ';
                 $result .= $result ? ' AND ' : '';
                 $this->lexer->moveNext();
             } else if ($this->lexer->isNext(self::T_OR)) {
@@ -96,8 +97,12 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                 if ($this->lexer->isNext(self::T_WORD)) {
                     [$parameterName, $columnValue] = $this->match(self::T_WORD);
                     $uniqueParameterName = $this->uniqueParameterName($parameterName);
-                    $result .= "$columnValue " . $this->match(self::T_OPERATOR) . " :$uniqueParameterName";
+                    $sqlOperator = $this->match(self::T_OPERATOR);
+                    $result .= "$columnValue " . $sqlOperator . " :$uniqueParameterName";
                     $value = $this->match(self::T_VALUE);
+                    if ($sqlOperator === 'LIKE' || $sqlOperator === 'ILIKE') {
+                        $value = str_replace('*', '%', $value);
+                    }
                     $parameters[$uniqueParameterName] = $toSQLValue($parameterName, $value);
                 }
             }
@@ -158,7 +163,10 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         return $parameterName . '_1';
     }
 
-    public function determineTypeAndValue($value) 
+    /**
+     * @param mixed $value
+     */
+    public function determineTypeAndValue($value): array
     {
         ['column' => $column] = $this->esql->__invoke($this->context);
         if ('and' === $value) {

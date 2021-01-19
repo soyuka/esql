@@ -31,7 +31,7 @@ final class CollectionTest extends ApiTestCase
             '@context' => '/contexts/Car',
             '@id' => '/cars',
             '@type' => 'hydra:Collection',
-            'hydra:totalItems' => 30,
+            'hydra:totalItems' => 33,
             'hydra:view' => [
                 '@id' => '/cars?page=1',
                 '@type' => 'hydra:PartialCollectionView',
@@ -50,7 +50,7 @@ final class CollectionTest extends ApiTestCase
             '@context' => '/contexts/Car',
             '@id' => '/cars',
             '@type' => 'hydra:Collection',
-            'hydra:totalItems' => 30,
+            'hydra:totalItems' => 33,
             'hydra:view' => [
                 '@id' => '/cars?page=2',
                 '@type' => 'hydra:PartialCollectionView',

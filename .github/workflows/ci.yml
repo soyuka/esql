@@ -7,6 +7,7 @@ on:
 env:
   COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   SHELL_VERBOSITY: 2
+  CODECOV_TOKEN: 74bc8cef-2189-4ac2-9f96-9c910c7c59b0
 
 jobs:
   php-cs-fixer:
@@ -85,6 +86,7 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: pecl, composer
           extensions: intl, bcmath, curl, openssl, mbstring 
+          coverage: pcov
           ini-values: memory_limit=-1
       - name: Get composer cache directory
         id: composercache
@@ -111,6 +113,12 @@ jobs:
         run: rm -Rf tests/Fixtures/app/var/cache/*
       - run: tests/Fixtures/app/console doctrine:schema:create -v
       - name: Run PHPUnit tests
+        if: (!startsWith(matrix.php, '8.0'))
+        run: |
+            vendor/bin/simple-phpunit --coverage-clover coverage.xml
+            bash <(curl -s https://codecov.io/bash)
+      - name: Run PHPUnit tests
+        if: (startsWith(matrix.php, '8.0'))
         run: vendor/bin/simple-phpunit
 
   postgresql:
@@ -141,7 +149,7 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: pecl, composer
           extensions: intl, bcmath, curl, openssl, mbstring, pdo_pgsql
-          coverage: none
+          coverage: pcov
           ini-values: memory_limit=-1
       - name: Get composer cache directory
         id: composercache
@@ -154,12 +162,10 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
       - name: Update project dependencies
         run: composer update --no-interaction --no-progress --ansi
-      - name: Require Symfony Uid
-        run: composer require symfony/uid --dev --no-interaction --no-progress --ansi
       - name: Install PHPUnit
         run: vendor/bin/simple-phpunit --version
       - name: Clear test app cache
         run: tests/Fixtures/app/console cache:clear --ansi
       - run: tests/Fixtures/app/console doctrine:schema:create -v
       - name: Run PHPUnit tests
-        run: vendor/bin/simple-phpunit
+        run: vendor/bin/simple-phpunit --coverage-clover coverage.xml

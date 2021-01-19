@@ -97,11 +97,12 @@ final class SortExtension implements QueryCollectionExtensionInterface
                 yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
                 break;
             case 'pdo_sqlite':
-            default:
                 if ($nulls) {
                     yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
                 }
 
+                yield "{$column} COLLATE NOCASE {$direction}";
+            default:
                 yield "{$column} {$direction}";
         }
     }

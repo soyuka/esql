@@ -11,7 +11,7 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         price: <randomNumber(5)>
     # invisible cars are worth a lot
     car_starting_with_c{1..10}:
-        name: <carName('c')>
+        name: <carName('z')>
         model: '@models*'
         price: <randomNumber(7)>
     passat:

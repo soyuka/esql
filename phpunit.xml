@@ -18,6 +18,12 @@
         <server name="APP_ENV" value="test" />
     </php>
 
+    <filter>
+      <whitelist processUncoveredFilesFromWhitelist="true">
+        <directory suffix=".php">src</directory>
+      </whitelist>
+    </filter>
+
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory>tests</directory>
