@@ -18,8 +18,6 @@ use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
-use InvalidArgumentException;
-use LogicException;
 use PhpMyAdmin\SqlParser\Components\Expression;
 use PhpMyAdmin\SqlParser\Components\GroupKeyword;
 use PhpMyAdmin\SqlParser\Components\OrderKeyword;
@@ -27,6 +25,8 @@ use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 use Soyuka\ESQL\ESQLMapperInterface;
+use Soyuka\ESQL\Exception\InvalidArgumentException;
+use Soyuka\ESQL\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -74,7 +74,7 @@ class DataPaginator
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request) {
-            throw new LogicException('Not in a request');
+            throw new RuntimeException('Not in a request');
         }
 
         $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
@@ -125,7 +125,7 @@ class DataPaginator
         $statement = $parser->statements[0];
 
         if (!$statement instanceof SelectStatement) {
-            throw new LogicException('No select statement found, can not count.');
+            throw new RuntimeException('No select statement found, can not count.');
         }
 
         $statement->expr = [new Expression('COUNT(1)', '_esql_count')];

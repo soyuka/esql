@@ -16,8 +16,8 @@ namespace Soyuka\ESQL\Bridge\Doctrine;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
-use LogicException;
 use Soyuka\ESQL\ESQL as Base;
+use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQL extends Base
 {
@@ -91,7 +91,7 @@ final class ESQL extends Base
             }
         }
 
-        throw new LogicException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
+        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
     }
 
     public function predicates(?array $fields = null, string $glue = ', '): string
@@ -111,12 +111,12 @@ final class ESQL extends Base
     {
         $manager = $this->registry->getManagerForClass($class);
         if (!$manager) {
-            throw new \RuntimeException('No manager for class '.$class);
+            throw new RuntimeException('No manager for class '.$class);
         }
 
         $classMetadata = $manager->getClassMetadata($class);
         if (!$classMetadata instanceof ClassMetadataInfo) {
-            throw new \RuntimeException('No class metadata for class '.$class);
+            throw new RuntimeException('No class metadata for class '.$class);
         }
 
         return $classMetadata;

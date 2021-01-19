@@ -19,6 +19,7 @@ use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\Exception\RuntimeException;
 use Soyuka\ESQL\Filter\FilterParserInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -78,7 +79,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         $statement = $parser->statements[0];
 
         if (!$statement instanceof SelectStatement) {
-            throw new \LogicException('Only select statements are supported');
+            throw new RuntimeException('Only select statements are supported');
         }
 
         if (!$statement->where) {

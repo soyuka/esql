@@ -13,11 +13,11 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Filter;
 
-use InvalidArgumentException;
 use JMS\Parser\AbstractParser;
 use JMS\Parser\SimpleLexer;
-use LogicException;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\Exception\InvalidArgumentException;
+use Soyuka\ESQL\Exception\RuntimeException;
 
 /**
  * Implements parsing referenced at https://postgrest.org/en/v7.0.0/api.html#horizontal-filtering-rows
@@ -131,7 +131,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
      */
     protected function parseInternal(): void
     {
-        throw new LogicException('Can not call parseInternal');
+        throw new RuntimeException('Can not call parseInternal');
     }
 
     private function operatorToSQLCondition(string $condition): string

@@ -16,10 +16,9 @@ namespace Soyuka\ESQL\Bridge\Doctrine;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
-use LogicException;
-use RuntimeException;
 use Soyuka\ESQL\ESQL;
 use Soyuka\ESQL\ESQLMapperInterface;
+use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQLMapper implements ESQLMapperInterface
 {
@@ -43,7 +42,7 @@ final class ESQLMapper implements ESQLMapperInterface
 
             $aliasPos = strpos($key, '_');
             if (false === $aliasPos) {
-                throw new LogicException('No alias found');
+                throw new RuntimeException('No alias found');
             }
 
             $alias = substr($key, 0, $aliasPos);
@@ -82,7 +81,7 @@ final class ESQLMapper implements ESQLMapperInterface
             }
         }
 
-        throw new LogicException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
+        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
     }
 
     private function getClassMetadata(string $class): ClassMetadataInfo
