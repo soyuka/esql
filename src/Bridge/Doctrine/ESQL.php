@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\Doctrine;
 
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use LogicException;
@@ -52,6 +53,17 @@ final class ESQL extends Base
         }
 
         return $this->getAlias($this->class).'.'.$fieldMapping['columnName'];
+    }
+
+    public function toSQLValue(string $fieldName, $value)
+    {
+        $fieldMapping = $this->metadata->fieldMappings[$fieldName] ?? null;
+        if (!$fieldMapping) {
+            return null;
+        }
+
+        $type = Type::getType($fieldMapping['type']);
+        return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
     }
 
     public function identifierPredicate(): string

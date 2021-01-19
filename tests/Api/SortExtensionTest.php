@@ -52,4 +52,11 @@ final class SortExtensionTest extends ApiTestCase
         $this->assertResponseIsSuccessful();
         $this->assertEquals('a', $response->toArray()['hydra:member'][0]['name'][0]);
     }
+
+    public function testGetCollectionSortByPrice(): void
+    {
+        $response = static::createClient()->request('GET', '/cars?sort=price.desc');
+        $this->assertResponseIsSuccessful();
+    }
+
 }

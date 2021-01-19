@@ -69,7 +69,7 @@ class DataPaginator
         ));
     }
 
-    public function paginate(string $query, string $resourceClass, ?string $operationName = null, array $context = []): PartialPaginatorInterface
+    public function paginate(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): PartialPaginatorInterface
     {
         $request = $this->requestStack->getCurrentRequest();
 
@@ -105,18 +105,18 @@ class DataPaginator
         }
 
         $firstResult = ($page - 1) * $itemsPerPage;
-        $totalItems = $isPartialEnabled ? -1 : $this->count($query);
+        $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters);
         $query = $query.' LIMIT '.$itemsPerPage.' OFFSET '.$firstResult;
         $connection = $this->managerRegistry->getConnection();
         $stmt = $connection->prepare($query);
-        $stmt->execute();
+        $stmt->execute($parameters);
         $data = $stmt->fetchAll();
         $data = $this->mapper->map($data, $resourceClass);
 
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
     }
 
-    protected function count(string $query): float
+    protected function count(string $query, array $parameters = []): float
     {
         $connection = $this->managerRegistry->getConnection();
 
@@ -141,7 +141,7 @@ class DataPaginator
         }
 
         $stmt = $connection->prepare($statement->build());
-        $stmt->execute();
+        $stmt->execute($parameters);
         ['_esql_count' => $totalItems] = $stmt->fetch();
 
         return (float) $totalItems;

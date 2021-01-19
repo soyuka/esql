@@ -41,6 +41,16 @@ class Car
     public ?string $color = null;
 
     /**
+     * @ORM\Column(type="integer", nullable=false)
+     */
+    public int $price = 0;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    public bool $sold = false;
+
+    /**
      * @ORM\ManyToOne(targetEntity=Model::class, inversedBy="cars")
      * @ORM\JoinColumn(nullable=false)
      */

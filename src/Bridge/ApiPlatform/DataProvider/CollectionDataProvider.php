@@ -64,7 +64,7 @@ SQL;
         }
 
         if ($this->dataPaginator->shouldPaginate($resourceClass, $operationName)) {
-            return $this->dataPaginator->paginate($query, $resourceClass, $operationName, $context);
+            return $this->dataPaginator->paginate($query, $resourceClass, $operationName, $parameters, $context);
         }
 
         $stmt = $connection->prepare($query);

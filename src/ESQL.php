@@ -43,6 +43,13 @@ abstract class ESQL implements ESQLInterface
     abstract public function column(string $fieldName): ?string;
 
     /**
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    abstract public function toSQLValue(string $fieldName, $value);
+
+    /**
      * Retrieves identifiers predicate, for example id = :id.
      */
     abstract public function identifierPredicate(): string;
@@ -112,6 +119,7 @@ abstract class ESQL implements ESQLInterface
             'table' => $that->table(),
             'columns' => $this->makeClosure('columns', $that, $class),
             'column' => $this->makeClosure('column', $that, $class),
+            'toSQLValue' => $this->makeClosure('toSQLValue', $that, $class),
             'identifier' => $this->makeClosure('identifierPredicate', $that, $class),
             'join' => $this->makeClosure('joinPredicate', $that, $class),
             'predicates' => $this->makeClosure('predicates', $that, $class),

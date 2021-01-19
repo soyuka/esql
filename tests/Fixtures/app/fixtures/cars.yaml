@@ -3,14 +3,36 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         name: <carName('a')>
         color: <safeColorName()>
         model: '@models*'
+        price: <randomNumber(2)>
     car_starting_with_b{1..10}:
         name: <carName('b')>
         model: '@models*'
         color: <safeColorName()>
+        price: <randomNumber(5)>
+    # invisible cars are worth a lot
     car_starting_with_c{1..10}:
         name: <carName('c')>
         model: '@models*'
+        price: <randomNumber(7)>
+    passat:
+        name: 'Passat'
+        model: '@model_vw'
+        price: 2599999
+        sold: false
+    golf:
+        name: 'Golf'
+        model: '@model_vw'
+        price: 1630000
+        sold: true
+    caddy:
+        name: 'Caddy'
+        model: '@model_vw'
+        price: 1000000
+        sold: true
+
 
 Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model:
     models_{1..10}:
         name: <name()>
+    model_vw:
+        name: 'Volkswagen'

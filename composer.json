@@ -7,7 +7,8 @@
         "symfony/http-kernel": "^5.2",
         "symfony/dependency-injection": "^5.2",
         "symfony/config": "^5.2",
-        "phpmyadmin/sql-parser": "^5.4"
+        "phpmyadmin/sql-parser": "^5.4",
+        "jms/parser-lib": "^1.0"
     },
     "require-dev": {
         "api-platform/core": "^2.6.0-beta.1",

@@ -23,6 +23,8 @@ use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
+use Soyuka\ESQL\Filter\FilterParser;
+use Soyuka\ESQL\Filter\FilterParserInterface;
 
 return function (ContainerConfigurator $configurator): void {
     $services = $configurator->services()->defaults()->autowire()->autoconfigure();
@@ -50,4 +52,6 @@ return function (ContainerConfigurator $configurator): void {
 
     $services->set('esql.collection_extension.filters', FilterExtension::class)
         ->tag('esql.collection_extension');
+
+    $services->set('esql.filter.parser', FilterParser::class)->alias(FilterParserInterface::class, 'esql.filter.parser');
 };
