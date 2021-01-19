@@ -15,17 +15,17 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         model: '@models*'
         price: <randomNumber(7)>
     passat:
-        name: 'Passat'
+        name: 'passat'
         model: '@model_vw'
         price: 2599999
         sold: false
     golf:
-        name: 'Golf'
+        name: 'golf'
         model: '@model_vw'
         price: 1630000
         sold: true
     caddy:
-        name: 'Caddy'
+        name: 'caddy'
         model: '@model_vw'
         price: 1000000
         sold: true

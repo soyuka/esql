@@ -63,6 +63,7 @@ final class ESQL extends Base
         }
 
         $type = Type::getType($fieldMapping['type']);
+
         return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
     }
 

@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * This file is part of the ESQL project.
+ *
+ * (c) Antoine Bluchet <soyuka@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
 namespace Soyuka\ESQL\Filter;
 
 use InvalidArgumentException;
@@ -10,24 +21,24 @@ use Soyuka\ESQL\ESQLInterface;
 
 /**
  * Implements parsing referenced at https://postgrest.org/en/v7.0.0/api.html#horizontal-filtering-rows
- * Example: and=(price.gt.1000,sold.is.false,or(name.not.eq.caddy,sold.is.true))
+ * Example: and=(price.gt.1000,sold.is.false,or(name.not.eq.caddy,sold.is.true)).
  */
 final class FilterParser extends AbstractParser implements FilterParserInterface
 {
-    const T_UNKNOWN = 0;
-    const T_AND = 1;
-    const T_OR = 2;
-    const T_OPEN = 3;
-    const T_CLOSE = 4;
-    const T_OPERATOR = 5;
-    const T_VALUE = 6;
-    const T_COLON = 7;
-    const T_WORD = 8;
+    public const T_UNKNOWN = 0;
+    public const T_AND = 1;
+    public const T_OR = 2;
+    public const T_OPEN = 3;
+    public const T_CLOSE = 4;
+    public const T_OPERATOR = 5;
+    public const T_VALUE = 6;
+    public const T_COLON = 7;
+    public const T_WORD = 8;
 
     private ESQLInterface $esql;
     private array $parameterNames = [];
 
-    public function __construct(ESQLInterface $esql) 
+    public function __construct(ESQLInterface $esql)
     {
         $this->esql = $esql;
         parent::__construct(new SimpleLexer('/
@@ -47,7 +58,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                 self::T_OPERATOR => 'T_OPERATOR',
                 self::T_VALUE => 'T_VALUE',
                 self::T_COLON => 'T_COLON',
-                self::T_WORD => 'T_WORD'
+                self::T_WORD => 'T_WORD',
             ],
             [$this, 'determineTypeAndValue']
         ));
@@ -74,14 +85,14 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                 $operator = ' AND ';
                 $result .= $result ? ' AND ' : '';
                 $this->lexer->moveNext();
-            } else if ($this->lexer->isNext(self::T_OR)) {
+            } elseif ($this->lexer->isNext(self::T_OR)) {
                 $operator = ' OR ';
                 $result .= $result ? ' OR ' : '';
                 $this->lexer->moveNext();
-            } else if ($this->lexer->isNext(self::T_OPEN)) {
+            } elseif ($this->lexer->isNext(self::T_OPEN)) {
                 $this->lexer->moveNext();
                 $result .= ++$openingParenthesis < 1 ? '' : '(';
-            } else if ($this->lexer->isNext(self::T_CLOSE)) {
+            } elseif ($this->lexer->isNext(self::T_CLOSE)) {
                 $result .= ++$closingParenthesis < 1 ? '' : ')';
                 $this->lexer->moveNext();
             }
@@ -98,9 +109,9 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                     [$parameterName, $columnValue] = $this->match(self::T_WORD);
                     $uniqueParameterName = $this->uniqueParameterName($parameterName);
                     $sqlOperator = $this->match(self::T_OPERATOR);
-                    $result .= "$columnValue " . $sqlOperator . " :$uniqueParameterName";
+                    $result .= "$columnValue ".$sqlOperator." :$uniqueParameterName";
                     $value = $this->match(self::T_VALUE);
-                    if ($sqlOperator === 'LIKE' || $sqlOperator === 'ILIKE') {
+                    if ('LIKE' === $sqlOperator || 'ILIKE' === $sqlOperator) {
                         $value = str_replace('*', '%', $value);
                     }
                     $parameters[$uniqueParameterName] = $toSQLValue($parameterName, $value);
@@ -116,15 +127,17 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
     }
 
     /**
-     * Not implemented, we override parse directly
+     * Not implemented, we override parse directly.
      */
-    protected function parseInternal() { throw new LogicException('Can not call parseInternal'); }
+    protected function parseInternal(): void
+    {
+        throw new LogicException('Can not call parseInternal');
+    }
 
     private function operatorToSQLCondition(string $condition): string
     {
         $negation = false;
-        if (0 === strpos($condition, 'not.'))
-        {
+        if (0 === strpos($condition, 'not.')) {
             $condition = substr($condition, 4);
             $negation = true;
         }
@@ -150,17 +163,18 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                 return $negation ? 'NOT IN' : 'IN';
         }
 
-        throw new InvalidArgumentException($condition . ' is not supported.');
+        throw new InvalidArgumentException($condition.' is not supported.');
     }
 
     private function uniqueParameterName(string $parameterName): string
     {
         if (isset($this->parameterNames[$parameterName])) {
-            return $parameterName . '_' . (++$this->parameterNames[$parameterName]);
+            return $parameterName.'_'.(++$this->parameterNames[$parameterName]);
         }
 
         $this->parameterNames[$parameterName] = 1;
-        return $parameterName . '_1';
+
+        return $parameterName.'_1';
     }
 
     /**
@@ -189,14 +203,14 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
             return [self::T_COLON, $value];
         }
 
-        if (is_string($value) && ($col = $column($value))) {
+        if (\is_string($value) && ($col = $column($value))) {
             return [self::T_WORD, [$value, $col]];
         }
 
-        if (is_string($value)) {
-            if ($value === 'true') {
+        if (\is_string($value)) {
+            if ('true' === $value) {
                 $value = true;
-            } else if ($value === 'false') {
+            } elseif ('false' === $value) {
                 $value = false;
             }
 

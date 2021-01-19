@@ -13,12 +13,10 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
+use PhpMyAdmin\SqlParser\Components\Condition;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
-use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
-use InvalidArgumentException;
-use JMS\Parser\AbstractParser;
-use PhpMyAdmin\SqlParser\Components\Condition;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\Filter\FilterParserInterface;
@@ -51,7 +49,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         $filterQuery = '';
         $propFilters = [];
         foreach ($request->query->all() as $key => $value) {
-            if ($key === 'or' || $key === 'and' || !$column($key)) {
+            if ('or' === $key || 'and' === $key || !$column($key)) {
                 continue;
             }
 
@@ -59,9 +57,9 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         }
 
         if (null !== $and = $request->query->get('and')) {
-            $filterQuery = $propFilters ? "and".substr($and, 0, -1)."," .implode(',', $propFilters). ")" : "and$and";
-        } else if($propFilters) {
-            $filterQuery = "and(" .implode(',', $propFilters). ")";
+            $filterQuery = $propFilters ? 'and'.substr($and, 0, -1).','.implode(',', $propFilters).')' : "and$and";
+        } elseif ($propFilters) {
+            $filterQuery = 'and('.implode(',', $propFilters).')';
         }
 
         if (null !== $or = $request->query->get('or')) {
@@ -86,7 +84,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         if (!$statement->where) {
             $statement->where = [new Condition($filterSQL)];
         }
-        
+
         return [$statement->build(), $parameters];
     }
 

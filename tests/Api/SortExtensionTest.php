@@ -58,5 +58,4 @@ final class SortExtensionTest extends ApiTestCase
         $response = static::createClient()->request('GET', '/cars?sort=price.desc');
         $this->assertResponseIsSuccessful();
     }
-
 }

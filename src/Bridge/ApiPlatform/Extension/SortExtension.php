@@ -101,7 +101,8 @@ final class SortExtension implements QueryCollectionExtensionInterface
                     yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
                 }
 
-                yield "{$column} COLLATE NOCASE {$direction}";
+                yield "{$column} {$direction}";
+                // no break
             default:
                 yield "{$column} {$direction}";
         }
