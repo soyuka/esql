@@ -47,7 +47,7 @@ class FilterParserTest extends KernelTestCase
     {
         yield [
             'and(price.eq.100,sold.is.true)',
-            ['car.price = :price_1 AND car.sold IS :sold_1', ['price_1' => '100', 'sold_1' => '1']],
+            ['car.price = :price_1 AND car.sold IS TRUE', ['price_1' => '100']],
         ];
 
         yield [
@@ -62,22 +62,22 @@ class FilterParserTest extends KernelTestCase
 
         yield [
             'and(sold.is.true,or(sold.is.true,price.gte.100))',
-            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 OR car.price >= :price_1)', ['sold_1' => '1', 'sold_2' => '1', 'price_1' => '100']],
+            ['car.sold IS TRUE OR (car.sold IS TRUE OR car.price >= :price_1)', ['price_1' => '100']],
         ];
 
         yield [
             'and(sold.is.true,or(sold.is.true,and(price.gte.100)))',
-            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price >= :price_1))', ['sold_1' => '1', 'sold_2' => '1', 'price_1' => '100']],
+            ['car.sold IS TRUE OR (car.sold IS TRUE AND (car.price >= :price_1))', ['price_1' => '100']],
         ];
 
         yield [
-            'and(sold.is.false,or(sold.is.true,and(price.lte.100)))',
-            ['car.sold IS :sold_1 OR (car.sold IS :sold_2 AND (car.price <= :price_1))', ['sold_1' => '0', 'sold_2' => '1', 'price_1' => '100']],
+            'and(sold.is.false,or(sold.is.null,and(price.lte.100)))',
+            ['car.sold IS FALSE OR (car.sold IS NULL AND (car.price <= :price_1))', ['price_1' => '100']],
         ];
 
         yield [
             'and(sold.not.is.true,price.not.eq.10)',
-            ['car.sold IS NOT :sold_1 AND car.price != :price_1', ['sold_1' => '1', 'price_1' => '10']],
+            ['car.sold IS NOT TRUE AND car.price != :price_1', ['price_1' => '10']],
         ];
 
         yield [

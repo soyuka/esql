@@ -132,12 +132,21 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                         continue;
                     }
 
-                    $result .= "$columnValue $sqlOperator :$uniqueParameterName";
                     $value = $this->match(self::T_VALUE);
-                    if ('LIKE' === $sqlOperator || 'ILIKE' === $sqlOperator) {
-                        $value = str_replace('*', '%', $value);
+                    if (0 === strpos($sqlOperator, 'IS')) {
+                        if (!\in_array($value, [true, false, null], true)) {
+                            throw new InvalidArgumentException('IS only works with true, false or null.');
+                        }
+
+                        $result .= "$columnValue $sqlOperator ".(true === $value ? 'TRUE' : (false === $value ? 'FALSE' : 'NULL'));
+                    } else {
+                        $result .= "$columnValue $sqlOperator :$uniqueParameterName";
+                        if (false !== strpos($sqlOperator, 'LIKE')) {
+                            $value = str_replace('*', '%', $value);
+                        }
+
+                        $parameters[$uniqueParameterName] = $toSQLValue($parameterName, $value);
                     }
-                    $parameters[$uniqueParameterName] = $toSQLValue($parameterName, $value);
                 }
             }
         }
@@ -178,6 +187,8 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                 return $negation ? '>=' : '<=';
             case 'neq':
                 return $negation ? '=' : '!=';
+            case 'ilike':
+                return $negation ? 'NOT ILIKE' : 'ILIKE';
             case 'like':
                 return $negation ? 'NOT LIKE' : 'LIKE';
             case 'is':
@@ -231,10 +242,13 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         }
 
         if (\is_string($value)) {
-            if ('true' === $value) {
+            $lower = strtolower($value);
+            if ('true' === $lower) {
                 $value = true;
-            } elseif ('false' === $value) {
+            } elseif ('false' === $lower) {
                 $value = false;
+            } elseif ('null' === $lower) {
+                $value = null;
             }
 
             return [self::T_VALUE, $value];

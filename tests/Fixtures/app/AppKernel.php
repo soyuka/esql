@@ -67,6 +67,7 @@ class AppKernel extends Kernel
                 break;
             default:
                 $loader->load(__DIR__.'/config/config_sqlite.yml');
+                break;
         }
     }
 }

@@ -19,8 +19,6 @@ use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use PhpMyAdmin\SqlParser\Components\Expression;
-use PhpMyAdmin\SqlParser\Components\GroupKeyword;
-use PhpMyAdmin\SqlParser\Components\OrderKeyword;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
@@ -130,22 +128,19 @@ class DataPaginator
 
         $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
-        if ($statement->order) {
-            switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
-                // Adds GROUP BY clause for postgresql when there's an ORDER clause
-                case 'pdo_pgsql':
-                    $groups = [];
-                    foreach ($statement->order as $order) {
-                        $groups[] = new GroupKeyword($order->expr);
-                    }
-
-                    /** @var OrderKeyword[] */
-                    $statement->group = $groups;
-                    break;
-            }
+        switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
+            case 'pdo_pgsql':
+                // Use a window with postgresql
+                if ($statement->order) {
+                    $statement->expr = [new Expression('COUNT(1) OVER ()', '_esql_count')];
+                }
+                $query = $statement->build().' LIMIT 1';
+                break;
+            default:
+                $query = $statement->build();
         }
 
-        $stmt = $connection->prepare($statement->build());
+        $stmt = $connection->prepare($query);
         $stmt->execute($parameters);
         ['_esql_count' => $totalItems] = $stmt->fetch();
 
