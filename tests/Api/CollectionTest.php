@@ -60,4 +60,33 @@ final class CollectionTest extends ApiTestCase
             ],
         ]);
     }
+
+    public function testGetCollectionPartial(): void
+    {
+        $response = static::createClient()->request('GET', '/cars?partial=true');
+        $this->assertResponseIsSuccessful();
+        $this->assertJsonContains([
+            '@context' => '/contexts/Car',
+            '@id' => '/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:view' => [
+                '@id' => '/cars?partial=true&page=1',
+                '@type' => 'hydra:PartialCollectionView',
+                'hydra:next' => '/cars?partial=true&page=2',
+            ],
+        ]);
+
+        $response = static::createClient()->request('GET', '/cars?partial=true&page=4');
+        $this->assertResponseIsSuccessful();
+        $this->assertJsonContains([
+            '@context' => '/contexts/Car',
+            '@id' => '/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:view' => [
+                '@id' => '/cars?partial=true&page=4',
+                '@type' => 'hydra:PartialCollectionView',
+                'hydra:previous' => '/cars?partial=true&page=3',
+            ],
+        ]);
+    }
 }
