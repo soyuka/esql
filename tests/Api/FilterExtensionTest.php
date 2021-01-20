@@ -41,6 +41,14 @@ final class FilterExtensionTest extends ApiTestCase
 
     public function testComplexFilter(): void
     {
+        $kernel = self::bootKernel();
+        $container = $kernel->getContainer();
+        $registry = $container->get('doctrine');
+
+        if ('pdo_sqlite' === $registry->getConnection()->getDriver()->getName()) {
+            $this->markTestSkipped();
+        }
+
         $response = static::createClient()->request('GET', '/cars?and=(price.gt.1000000,sold.is.false,or(sold.is.true))&sort=price.asc');
         $this->assertResponseIsSuccessful();
         $this->assertJsonContains([
