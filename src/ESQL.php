@@ -117,17 +117,17 @@ abstract class ESQL implements ESQLInterface
 
         return $this->closures[$class] = [
             'table' => $that->table(),
-            'columns' => $this->makeClosure('columns', $that, $class),
-            'column' => $this->makeClosure('column', $that, $class),
-            'toSQLValue' => $this->makeClosure('toSQLValue', $that, $class),
-            'identifier' => $this->makeClosure('identifierPredicate', $that, $class),
-            'join' => $this->makeClosure('joinPredicate', $that, $class),
-            'predicates' => $this->makeClosure('predicates', $that, $class),
-            'parameters' => $this->makeClosure('parameters', $that, $class),
+            'columns' => $this->makeClosure('columns', $that),
+            'column' => $this->makeClosure('column', $that),
+            'toSQLValue' => $this->makeClosure('toSQLValue', $that),
+            'identifier' => $this->makeClosure('identifierPredicate', $that),
+            'join' => $this->makeClosure('joinPredicate', $that),
+            'predicates' => $this->makeClosure('predicates', $that),
+            'parameters' => $this->makeClosure('parameters', $that),
         ];
     }
 
-    private function makeClosure(string $method, self $that, string $class): \Closure
+    private function makeClosure(string $method, self $that): \Closure
     {
         return fn (): string => (string) \call_user_func_array([$that, $method], \func_get_args());
     }

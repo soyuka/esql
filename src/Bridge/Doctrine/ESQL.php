@@ -33,7 +33,7 @@ final class ESQL extends Base
         $metadata = $this->getClassMetadata($this->class);
         $alias = $this->getAlias($this->class);
 
-        return $metadata->getTableName().' '.$alias;
+        return "{$metadata->getTableName()} $alias";
     }
 
     public function columns(?array $fields = null, string $glue = ', '): string
@@ -42,7 +42,7 @@ final class ESQL extends Base
         $fields = $fields ? array_intersect_key($this->metadata->fieldMappings, array_flip($fields)) : $this->metadata->fieldMappings;
         $alias = $this->getAlias($this->class);
 
-        return implode($glue, array_map(fn ($value) => $alias.'.'.$value['columnName'].' as '.$alias.'_'.$value['columnName'], $fields));
+        return implode($glue, array_map(fn ($value) => "$alias.{$value['columnName']} as {$alias}_{$value['columnName']}", $fields));
     }
 
     public function column(string $fieldName): ?string
@@ -52,7 +52,7 @@ final class ESQL extends Base
             return null;
         }
 
-        return $this->getAlias($this->class).'.'.$fieldMapping['columnName'];
+        return "{$this->getAlias($this->class)}.{$fieldMapping['columnName']}";
     }
 
     public function toSQLValue(string $fieldName, $value)
@@ -83,8 +83,8 @@ final class ESQL extends Base
                 $str = '';
                 foreach ($association['joinColumns'] as $i => $joinColumn) {
                     $str .= 0 === $i ? '' : ' AND ';
-                    $str .= $relationAlias.'.'.$joinColumn['referencedColumnName'];
-                    $str .= ' = '.$alias.'.'.$joinColumn['name'];
+                    $str .= "{$relationAlias}.{$joinColumn['referencedColumnName']}";
+                    $str .= " = {$alias}.{$joinColumn['name']}";
                 }
 
                 return $str;
@@ -101,7 +101,7 @@ final class ESQL extends Base
         $str = '';
         foreach ($fields as $fieldName => $field) {
             $str .= $str ? $glue : '';
-            $str .= $alias.'.'.$field['columnName'].' = :'.$fieldName;
+            $str .= "{$alias}.{$field['columnName']} = :{$fieldName}";
         }
 
         return $str;
