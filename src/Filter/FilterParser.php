@@ -72,7 +72,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
         $this->context = $context;
         $this->lexer->setInput($str);
-        ['toSQLValue' => $toSQLValue] = $this->esql->__invoke($context);
+        ['toSQLValue' => $toSQLValue, 'supportsSQLClause' => $supportsSQLClause] = $this->esql->__invoke($context);
 
         $result = '';
         $parameters = [];
@@ -133,6 +133,10 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                     }
 
                     $value = $this->match(self::T_VALUE);
+                    if (!$supportsSQLClause($sqlOperator)) {
+                        throw new InvalidArgumentException("The operator '$sqlOperator' is not supported.");
+                    }
+
                     if (0 === strpos($sqlOperator, 'IS')) {
                         if (!\in_array($value, [true, false, null], true)) {
                             throw new InvalidArgumentException('IS only works with true, false or null.');

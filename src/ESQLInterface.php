@@ -46,6 +46,20 @@ interface ESQLInterface
     public function predicates(?array $fields = null, string $glue = ', '): string;
 
     /**
+     * Normalize this sql value according to the field type.
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     */
+    public function toSQLValue(string $fieldName, $value);
+
+    /**
+     * Whether the current driver supports an SQL clause.
+     */
+    public function supportsSQLClause(string $sqlClause): bool;
+
+    /**
      * Retrieves a list of binded parameters.
      * more a helper for persistence not used.
      */

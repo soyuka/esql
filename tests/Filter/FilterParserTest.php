@@ -32,6 +32,7 @@ class FilterParserTest extends KernelTestCase
      */
     public function testParseCarFilter($filter, $result): void
     {
+        $_SERVER['ESQL_DB'] = 'postgres';
         self::bootKernel();
         $container = self::$kernel->getContainer();
         $registry = $container->get('doctrine');

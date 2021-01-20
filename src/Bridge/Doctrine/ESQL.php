@@ -55,18 +55,6 @@ final class ESQL extends Base
         return "{$this->getAlias($this->class)}.{$fieldMapping['columnName']}";
     }
 
-    public function toSQLValue(string $fieldName, $value)
-    {
-        $fieldMapping = $this->metadata->fieldMappings[$fieldName] ?? null;
-        if (!$fieldMapping) {
-            return null;
-        }
-
-        $type = Type::getType($fieldMapping['type']);
-
-        return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
-    }
-
     public function identifierPredicate(): string
     {
         return $this->predicates($this->metadata->getIdentifierFieldNames(), ' AND ');
@@ -105,6 +93,28 @@ final class ESQL extends Base
         }
 
         return $str;
+    }
+
+    public function toSQLValue(string $fieldName, $value)
+    {
+        $fieldMapping = $this->metadata->fieldMappings[$fieldName] ?? null;
+        if (!$fieldMapping) {
+            return null;
+        }
+
+        $type = Type::getType($fieldMapping['type']);
+
+        return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
+    }
+
+    public function supportsSQLClause(string $sqlClause): bool
+    {
+        switch ($this->registry->getConnection()->getDriver()->getName()) {
+          case 'pdo_sqlite':
+            return 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true;
+      }
+
+        return true;
     }
 
     public function getClassMetadata(string $class)

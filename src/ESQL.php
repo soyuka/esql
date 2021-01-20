@@ -30,53 +30,27 @@ abstract class ESQL implements ESQLInterface
     protected $metadata = null;
     protected string $class = '';
 
-    /**
-     * Retrieves the Table name for the given resource.
-     */
     abstract public function table(): string;
 
-    /**
-     * Retrieves columns for a given resource.
-     */
     abstract public function columns(?array $fields = null, string $glue = ', '): string;
 
     abstract public function column(string $fieldName): ?string;
 
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    abstract public function toSQLValue(string $fieldName, $value);
-
-    /**
-     * Retrieves identifiers predicate, for example id = :id.
-     */
     abstract public function identifierPredicate(): string;
 
-    /**
-     * Retrieves join predicate, for example car.model_id = model.id.
-     */
     abstract public function joinPredicate(string $relationClass): string;
 
-    /**
-     * Retrieves identifiers predicate, for example foo = :foo.
-     */
     abstract public function predicates(?array $fields = null, string $glue = ', '): string;
 
-    /**
-     * Retrieves a list of binded parameters.
-     */
+    abstract public function toSQLValue(string $fieldName, $value);
+
+    abstract public function supportsSQLClause(string $sqlClause): bool;
+
     public function parameters(array $bindings): string
     {
         return ':'.implode(', :', array_keys($bindings));
     }
 
-    /**
-     * Retrieves the Table name for the given resource.
-     *
-     * @param object|string $objectOrClass
-     */
     public static function getAlias($objectOrClass): string
     {
         /** @var class-string */
@@ -119,10 +93,11 @@ abstract class ESQL implements ESQLInterface
             'table' => $that->table(),
             'columns' => $this->makeClosure('columns', $that),
             'column' => $this->makeClosure('column', $that),
-            'toSQLValue' => $this->makeClosure('toSQLValue', $that),
             'identifier' => $this->makeClosure('identifierPredicate', $that),
             'join' => $this->makeClosure('joinPredicate', $that),
             'predicates' => $this->makeClosure('predicates', $that),
+            'toSQLValue' => $this->makeClosure('toSQLValue', $that),
+            'supportsSQLClause' => $this->makeClosure('supportsSQLClause', $that),
             'parameters' => $this->makeClosure('parameters', $that),
         ];
     }
