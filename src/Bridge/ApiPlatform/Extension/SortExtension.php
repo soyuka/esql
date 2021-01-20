@@ -102,7 +102,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
                 }
 
                 yield "{$column} {$direction}";
-                // no break
+                break;
             default:
                 yield "{$column} {$direction}";
         }

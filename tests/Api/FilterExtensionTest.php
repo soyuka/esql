@@ -27,13 +27,32 @@ final class FilterExtensionTest extends ApiTestCase
     {
         $response = static::createClient()->request('GET', '/cars?sold=eq.true');
         $this->assertResponseIsSuccessful();
-        dump($response->toArray()['hydra:member']);
+        $this->assertJsonContains([
+            '@context' => '/contexts/Car',
+            '@id' => '/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:member' => [
+                ['name' => 'golf', 'sold' => true],
+                ['name' => 'caddy', 'sold' => true],
+            ],
+            'hydra:totalItems' => 2,
+        ]);
     }
 
-    // public function testComplexFilter(): void
-    // {
-    //     $response = static::createClient()->request('GET', '/cars?and=(price.gt.1000,sold.is.false,or(name.not.eq.caddy,sold.is.true))');
-    //     $this->assertResponseIsSuccessful();
-    //     dump($response->toArray()['hydra:member']);
-    // }
+    public function testComplexFilter(): void
+    {
+        $response = static::createClient()->request('GET', '/cars?and=(price.gt.1000000,sold.is.false,or(sold.is.true))&sort=price.asc');
+        $this->assertResponseIsSuccessful();
+        $this->assertJsonContains([
+            '@context' => '/contexts/Car',
+            '@id' => '/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:member' => [
+                ['name' => 'golf', 'sold' => true, 'price' => 10000],
+                ['name' => 'caddy', 'sold' => true, 'price' => 1000000],
+                ['name' => 'passat', 'sold' => false, 'price' => 2599999],
+            ],
+            'hydra:totalItems' => 3,
+        ]);
+    }
 }

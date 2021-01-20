@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Soyuka\ESQL\Tests;
 
 use Jane\AutoMapper\AutoMapperInterface;
+use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
-use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;

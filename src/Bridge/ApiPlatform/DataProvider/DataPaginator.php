@@ -131,13 +131,18 @@ class DataPaginator
         $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
         if ($statement->order) {
-            $groups = [];
-            foreach ($statement->order as $order) {
-                $groups[] = new GroupKeyword($order->expr);
-            }
+            switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
+                // Adds GROUP BY clause for postgresql when there's an ORDER clause
+                case 'pdo_pgsql':
+                    $groups = [];
+                    foreach ($statement->order as $order) {
+                        $groups[] = new GroupKeyword($order->expr);
+                    }
 
-            /** @var OrderKeyword[] */
-            $statement->group = $groups;
+                    /** @var OrderKeyword[] */
+                    $statement->group = $groups;
+                    break;
+            }
         }
 
         $stmt = $connection->prepare($statement->build());

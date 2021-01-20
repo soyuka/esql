@@ -9,11 +9,10 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         model: '@models*'
         color: <safeColorName()>
         price: <randomNumber(5)>
-    # invisible cars are worth a lot
     car_starting_with_c{1..10}:
         name: <carName('z')>
         model: '@models*'
-        price: <randomNumber(7)>
+        price: <randomNumber(3)>
     passat:
         name: 'passat'
         model: '@model_vw'
@@ -22,7 +21,7 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
     golf:
         name: 'golf'
         model: '@model_vw'
-        price: 1630000
+        price: 10000
         sold: true
     caddy:
         name: 'caddy'

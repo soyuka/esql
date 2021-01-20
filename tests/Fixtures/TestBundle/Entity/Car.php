@@ -17,9 +17,8 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ApiResource(attributes={"order"={"name"="ASC", "id"="ASC"}})
- * @ApiResource
- * @ORM\Entity(repositoryClass=CarRepository::class)
+ * @ApiResource(attributes={"order"={"name"="ASC", "id"="ASC"}, "esql"=true})
+ * @ORM\Entity
  */
 class Car
 {

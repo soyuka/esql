@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Bridge\Doctrine;
+namespace Soyuka\ESQL\Bridge\Automapper;
 
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;

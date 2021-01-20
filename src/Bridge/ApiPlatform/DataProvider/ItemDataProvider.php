@@ -15,6 +15,7 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\DataProvider;
 
 use ApiPlatform\Core\DataProvider\DenormalizedIdentifiersAwareItemDataProviderInterface;
 use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
@@ -25,17 +26,21 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
     private ManagerRegistry $managerRegistry;
     private AutoMapperInterface $automapper;
     private ESQLInterface $esql;
+    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql)
+    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql, ResourceMetadataFactoryInterface $resourceMetadataFactory)
     {
         $this->managerRegistry = $managerRegistry;
         $this->automapper = $automapper;
         $this->esql = $esql;
+        $this->resourceMetadataFactory = $resourceMetadataFactory;
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
     {
-        return $this->managerRegistry->getManagerForClass($resourceClass) instanceof EntityManagerInterface;
+        $metadata = $this->resourceMetadataFactory->create($resourceClass);
+
+        return $metadata->getAttribute('esql') && $this->managerRegistry->getManagerForClass($resourceClass) instanceof EntityManagerInterface;
     }
 
     public function getItem(string $resourceClass, $id, string $operationName = null, array $context = [])

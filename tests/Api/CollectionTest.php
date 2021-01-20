@@ -36,7 +36,7 @@ final class CollectionTest extends ApiTestCase
                 '@id' => '/cars?page=1',
                 '@type' => 'hydra:PartialCollectionView',
                 'hydra:first' => '/cars?page=1',
-                'hydra:last' => '/cars?page=3',
+                'hydra:last' => '/cars?page=4',
                 'hydra:next' => '/cars?page=2',
             ],
         ]);
@@ -55,7 +55,7 @@ final class CollectionTest extends ApiTestCase
                 '@id' => '/cars?page=2',
                 '@type' => 'hydra:PartialCollectionView',
                 'hydra:first' => '/cars?page=1',
-                'hydra:last' => '/cars?page=3',
+                'hydra:last' => '/cars?page=4',
                 'hydra:next' => '/cars?page=3',
             ],
         ]);

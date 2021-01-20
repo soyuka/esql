@@ -16,6 +16,7 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\DataProvider;
 use ApiPlatform\Core\DataProvider\CollectionDataProviderInterface;
 use ApiPlatform\Core\DataProvider\ContextAwareCollectionDataProviderInterface;
 use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -29,10 +30,11 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
     private ESQLMapperInterface $mapper;
     private ESQLInterface $esql;
     private DataPaginator $dataPaginator;
+    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
     private iterable $collectionExtensions;
     private LoggerInterface $logger;
 
-    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, DataPaginator $dataPaginator, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, DataPaginator $dataPaginator, ResourceMetadataFactoryInterface $resourceMetadataFactory, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
     {
         $this->managerRegistry = $managerRegistry;
         $this->mapper = $mapper;
@@ -40,11 +42,14 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
         $this->dataPaginator = $dataPaginator;
         $this->collectionExtensions = $collectionExtensions;
         $this->logger = $logger ?: new NullLogger();
+        $this->resourceMetadataFactory = $resourceMetadataFactory;
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
     {
-        return $this->managerRegistry->getManagerForClass($resourceClass) instanceof EntityManagerInterface;
+        $metadata = $this->resourceMetadataFactory->create($resourceClass);
+
+        return $metadata->getAttribute('esql') && $this->managerRegistry->getManagerForClass($resourceClass) instanceof EntityManagerInterface;
     }
 
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])

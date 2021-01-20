@@ -7,6 +7,7 @@ PHP Extended SQL is an alternative to the also-known DQL (Doctrine Query Languag
 use App\Car;
 use App\Model;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
+use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
 
 $connection = $managerRegistry->getConnection();
 $esql = new ESQL($managerRegistry)
@@ -26,25 +27,30 @@ SQL;
 
 $stmt = $connection->prepare($query);
 $stmt->execute(['id' => 1]);
-var_dump($stmt->fetch());
-```
+$data = $stmt->fetch();
 
-To map SQL data to objects ESQL uses janephp/automapper and Doctrine metadata:
-
-```php
-<?php
-use App\Car;
-use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
-
-/** $autoMapper is janephp/automapper **/
+// Use the ESQLMapper to transform this array to objects:
 $mapper = new ESQLMapper($autoMapper, $managerRegistry);
-var_dump($mapper->map($stmt->fetch(), Car::class));
+dump($mapper->map($stmt->fetch(), Car::class));
 ```
-
-It supports relations see [MapperTest](https://github.com/soyuka/esql/blob/main/tests/Mapper/MapperTest.php).
 
 ## API Platform bridge
 
-This package comes with an API Platform bridge that supports filters and pagination. If you register the bundle we will override the default DataProvider. This bridge will use [`janephp/automapper`](https://github.com/janephp/automapper) to map data to your classes.
+This package comes with an API Platform bridge that supports filters and pagination. To use our bridge, use the `esql` attribute:
 
-Note: Persistence is NOT SUPPORTED yet. Just use Doctrine as it behaves just fine for this.
+
+```php
+<?php
+
+use ApiPlatform\Core\Annotation\ApiResource;
+
+/**
+ * @ApiResource(attributes={"esql"=true})
+ */
+ class Car {}
+```
+
+# TODO
+  - ESQLMapper remove doctrine link and use ESQL
+  - ESQLMapper with symfony serializer
+  - Register auto filter for documentation

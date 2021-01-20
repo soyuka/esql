@@ -13,14 +13,13 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Soyuka\ESQL\Bridge\ApiPlatform\DataPersister\DataPersister;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\CollectionDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\ItemDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\FilterExtension;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\SortExtension;
+use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
-use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Filter\FilterParser;
@@ -38,11 +37,11 @@ return function (ContainerConfigurator $configurator): void {
         ->arg('$partialPaginationParameterName', '%api_platform.collection.pagination.partial_parameter_name%')
         ->alias(DataPaginator::class, 'esql.data_paginator');
 
-    $services->set('api_platform.doctrine.orm.default.item_data_provider', ItemDataProvider::class);
-    $services->set('api_platform.doctrine.orm.default.collection_data_provider', CollectionDataProvider::class)
+    $services->set('esql.api_platform.default.item_data_provider', ItemDataProvider::class)
+        ->tag('api_platform.item_data_provider', ['priority' => 10]);
+    $services->set('esql.api_platform.default.collection_data_provider', CollectionDataProvider::class)
+        ->tag('api_platform.collection_data_provider', ['priority' => 10])
         ->arg('$collectionExtensions', tagged_iterator('esql.collection_extension'));
-
-    // $services->set('api_platform.doctrine.orm.data_persister', DataPersister::class);
 
     $services->set('esql.doctrine.mapper', ESQLMapper::class)
         ->alias(ESQLMapperInterface::class, 'esql.doctrine.mapper');

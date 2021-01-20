@@ -47,7 +47,7 @@ final class Paginator implements PaginatorInterface, \IteratorAggregate
 
     public function getLastPage(): float
     {
-        return floor($this->totalItems / $this->itemsPerPage);
+        return ceil($this->totalItems / $this->itemsPerPage);
     }
 
     public function getTotalItems(): float
