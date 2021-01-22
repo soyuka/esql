@@ -47,6 +47,7 @@ interface ESQLInterface
 
     /**
      * Retrieves identifiers predicate, for example foo = :foo.
+     * When no fields are provided it will output every columns.
      */
     public function predicates(?array $fields = null, string $glue = ', '): string;
 
