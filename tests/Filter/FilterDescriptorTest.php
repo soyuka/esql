@@ -25,7 +25,6 @@ use Soyuka\ESQL\Bridge\ApiPlatform\Filter\FilterDescriptor;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Symfony\Component\PropertyInfo\Type;
 
-
 /**
  * @psalm-suppress UndefinedClass
  */

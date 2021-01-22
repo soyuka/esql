@@ -16,9 +16,6 @@ namespace App\Tests\Api;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 
-/**
- * @psalm-suppress MissingDependency
- */
 final class CollectionTest extends ApiTestCase
 {
     use RefreshDatabaseTrait;
@@ -71,7 +68,7 @@ final class CollectionTest extends ApiTestCase
             '@type' => 'hydra:Collection',
             'hydra:view' => [
                 '@id' => '/cars?partial=true&page=1',
-                '@type' => 'hydra:PartialCollectionView'
+                '@type' => 'hydra:PartialCollectionView',
             ],
         ]);
 

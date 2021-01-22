@@ -10,9 +10,39 @@
     <issueHandlers>
       <PropertyNotSetInConstructor>
         <errorLevel type="suppress">
-          <directory name="tests/Fixtures/TestBundle/Entity" />
+          <directory name="tests" />
         </errorLevel>
       </PropertyNotSetInConstructor>
+      <MissingDependency>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </MissingDependency>
+      <ArgumentTypeCoercion>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </ArgumentTypeCoercion>
+      <PossiblyNullReference>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </PossiblyNullReference>
+      <PossiblyNullArgument>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </PossiblyNullArgument>
+      <InternalMethod>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </InternalMethod>
+      <TooManyArguments>
+        <errorLevel type="suppress">
+          <directory name="tests" />
+        </errorLevel>
+      </TooManyArguments>
     </issueHandlers>
     <projectFiles>
         <directory name="src" />

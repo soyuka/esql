@@ -19,9 +19,6 @@ use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-/**
- * @psalm-suppress MissingDependency
- */
 class FilterParserTest extends KernelTestCase
 {
     /**
@@ -35,6 +32,7 @@ class FilterParserTest extends KernelTestCase
         self::bootKernel();
         $container = self::$kernel->getContainer();
         $registry = $container->get('doctrine');
+
         $esql = new ESQL($registry);
         $filterParser = new FilterParser($esql);
         ESQL::getAlias(Car::class);

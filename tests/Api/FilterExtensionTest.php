@@ -16,9 +16,6 @@ namespace App\Tests\Api;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 
-/**
- * @psalm-suppress MissingDependency
- */
 final class FilterExtensionTest extends ApiTestCase
 {
     use RefreshDatabaseTrait;

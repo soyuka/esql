@@ -16,17 +16,16 @@ namespace App\Tests;
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
 
-/**
- * @psalm-suppress MissingDependency
- */
 final class ItemTest extends ApiTestCase
 {
     use RefreshDatabaseTrait;
 
     public function testGetItem(): void
     {
-        $response = static::createClient()->request('GET', '/cars');
-        $cars = $response->toArray()['hydra:member'];
+        $client = static::createClient();
+        $response = $client->request('GET', '/cars');
+        $cars = $response->toArray();
+        $cars = $cars['hydra:member'];
         $iri = $cars[0]['@id'];
         $response = static::createClient()->request('GET', $iri);
         $this->assertResponseIsSuccessful();
