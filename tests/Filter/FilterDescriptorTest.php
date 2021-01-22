@@ -20,14 +20,16 @@ use ApiPlatform\Core\Metadata\Property\PropertyNameCollection;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use PHPUnit\Framework\TestCase;
+use PhpCsFixer\Tests\InterimTestCase;
 use Soyuka\ESQL\Bridge\ApiPlatform\Filter\FilterDescriptor;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Symfony\Component\PropertyInfo\Type;
 
+
 /**
- * @psalm-suppress MissingDependency
+ * @psalm-suppress UndefinedClass
  */
-class FilterDescriptor extends TestCase
+class FilterDescriptorTest extends TestCase
 {
     public function testGetFilterDescription(): void
     {

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\CollectionDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\ItemDataProvider;
