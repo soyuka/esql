@@ -52,6 +52,7 @@ class FilterDescriptor implements FilterInterface
                 case Type::BUILTIN_TYPE_INT:
                 case Type::BUILTIN_TYPE_FLOAT:
                     $filters[$property] = [
+                        'property' => $property,
                         'type' => 'string',
                         'required' => false,
                         'description' => 'Numeric filters',
@@ -71,6 +72,7 @@ class FilterDescriptor implements FilterInterface
                     break;
                 case Type::BUILTIN_TYPE_STRING:
                     $filters[$property] = [
+                        'property' => $property,
                         'type' => 'string',
                         'required' => false,
                         'description' => 'String filters',
@@ -87,6 +89,7 @@ class FilterDescriptor implements FilterInterface
                     break;
                 case Type::BUILTIN_TYPE_BOOL:
                     $filters[$property] = [
+                        'property' => $property,
                         'type' => 'string',
                         'required' => false,
                         'description' => 'Boolean filters',
@@ -100,13 +103,14 @@ class FilterDescriptor implements FilterInterface
                     ];
             }
 
-            if ($type->isNullable()) {
+            if (isset($filters[$property]) && $type->isNullable()) {
                 $filters[$property]['openapi']['examples']['is'] = $this->getExample('Is null', sprintf('%s=is.null or %1$s=not.is.null', $property));
             }
         }
 
-        return $filters + [
+        return array_merge($filters, [
             'or' => [
+                'property' => '',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Composeable filter or',
@@ -115,6 +119,7 @@ class FilterDescriptor implements FilterInterface
                 ],
             ],
             'and' => [
+                'property' => '',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Composeable filter and',
@@ -122,7 +127,7 @@ class FilterDescriptor implements FilterInterface
                     'example' => 'and(name.eq.1,price.lte.100)',
                 ],
             ],
-        ];
+        ]);
     }
 
     private function getExample(string $example, string $value): array
