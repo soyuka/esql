@@ -41,6 +41,11 @@ interface ESQLInterface
     public function joinPredicate(string $relationClass): string;
 
     /**
+     * Relation field name.
+     */
+    public function relationFieldName(string $relationClass): string;
+
+    /**
      * Retrieves identifiers predicate, for example foo = :foo.
      */
     public function predicates(?array $fields = null, string $glue = ', '): string;

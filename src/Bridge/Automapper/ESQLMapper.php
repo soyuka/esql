@@ -13,26 +13,27 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\Automapper;
 
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\ESQL;
+use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQLMapper implements ESQLMapperInterface
 {
     private AutoMapperInterface $automapper;
-    private ManagerRegistry $registry;
+    private ESQLInterface $esql;
 
-    public function __construct(AutoMapperInterface $automapper, ManagerRegistry $registry)
+    public function __construct(AutoMapperInterface $automapper, ESQLInterface $esql)
     {
         $this->automapper = $automapper;
-        $this->registry = $registry;
+        $this->esql = $esql;
     }
 
     public function map(array $data, string $resourceClass)
     {
+        ['relationFieldName' => $relationFieldName] = $this->esql->__invoke($resourceClass);
+
         $memory = [];
         foreach ($data as $key => $value) {
             if (\is_int($key)) {
@@ -60,7 +61,7 @@ final class ESQLMapper implements ESQLMapperInterface
             $normalized = $memory[$resourceClass];
             unset($memory[$resourceClass]);
             foreach ($memory as $class => $value) {
-                $normalized[$this->getRelationFieldName($resourceClass, $class)] = $value;
+                $normalized[$relationFieldName($class)] = $value;
                 unset($memory[$class]);
             }
 
@@ -68,33 +69,5 @@ final class ESQLMapper implements ESQLMapperInterface
         }
 
         return $data;
-    }
-
-    private function getRelationFieldName(string $class, string $relationClass): string
-    {
-        $metadata = $this->getClassMetadata($class);
-        $relationMetadata = $this->getClassMetadata($relationClass);
-
-        foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
-            if ($association['targetEntity'] === $relationClass) {
-                return $fieldName;
-            }
-        }
-
-        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
-    }
-
-    private function getClassMetadata(string $class): ClassMetadataInfo
-    {
-        $manager = $this->registry->getManagerForClass($class);
-        if (!$manager) {
-            throw new RuntimeException('No manager for class '.$class);
-        }
-        $classMetadata = $manager->getClassMetadata($class);
-        if (!$classMetadata instanceof ClassMetadataInfo) {
-            throw new RuntimeException('No class metadata for class '.$class);
-        }
-
-        return $classMetadata;
     }
 }

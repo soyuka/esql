@@ -82,6 +82,18 @@ final class ESQL extends Base
         throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
     }
 
+    public function relationFieldName(string $relationClass): string
+    {
+        $relationMetadata = $this->getClassMetadata($relationClass);
+        foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
+            if ($association['targetEntity'] === $relationClass) {
+                return $fieldName;
+            }
+        }
+
+        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
+    }
+
     public function predicates(?array $fields = null, string $glue = ', '): string
     {
         $alias = $this->getAlias($this->class);

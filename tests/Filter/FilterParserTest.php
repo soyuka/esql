@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Tests;
+namespace Soyuka\ESQL\Tests\Filter;
 
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Filter\FilterParser;

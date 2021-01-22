@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Tests;
+namespace Soyuka\ESQL\Automapper\Tests;
 
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
@@ -23,7 +23,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 /**
  * @psalm-suppress MissingDependency
  */
-class MapperTest extends KernelTestCase
+class ESQLMapperTest extends KernelTestCase
 {
     public function testMapCar(): void
     {
@@ -48,7 +48,8 @@ class MapperTest extends KernelTestCase
         $car2->name = 'Passat';
         $car2->model = $model;
 
-        $mapper = new ESQLMapper($autoMapper, $registry);
+        $esql = new ESQL($registry);
+        $mapper = new ESQLMapper($autoMapper, $esql);
         $this->assertEquals([$car, $car2], $mapper->map([
             ['car_id' => '1', 'car_name' => 'Caddy', 'model_id' => '1', 'model_name' => 'Volkswagen'],
             ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],

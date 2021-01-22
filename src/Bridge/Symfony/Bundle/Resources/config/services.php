@@ -13,11 +13,14 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\CollectionDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\ItemDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\FilterExtension;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\SortExtension;
+use Soyuka\ESQL\Bridge\ApiPlatform\Filter\FilterDescriptor;
+use Soyuka\ESQL\Bridge\ApiPlatform\Metadata\FilterMetadataFactory;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\ESQLInterface;
@@ -53,4 +56,6 @@ return function (ContainerConfigurator $configurator): void {
         ->tag('esql.collection_extension');
 
     $services->set('esql.filter.parser', FilterParser::class)->alias(FilterParserInterface::class, 'esql.filter.parser');
+    $services->set('esql.filter_descriptor', FilterDescriptor::class)->tag('api_platform.filter');
+    $services->set('esql.filter_metadata', FilterMetadataFactory::class)->decorate('api_platform.metadata.resource.metadata_factory')->arg('$decorated', service('.inner'));
 };

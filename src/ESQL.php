@@ -40,6 +40,8 @@ abstract class ESQL implements ESQLInterface
 
     abstract public function joinPredicate(string $relationClass): string;
 
+    abstract public function relationFieldName(string $relationClass): string;
+
     abstract public function predicates(?array $fields = null, string $glue = ', '): string;
 
     abstract public function toSQLValue(string $fieldName, $value);
@@ -98,6 +100,7 @@ abstract class ESQL implements ESQLInterface
             'predicates' => $this->makeClosure('predicates', $that),
             'toSQLValue' => $this->makeClosure('toSQLValue', $that),
             'supportsSQLClause' => $this->makeClosure('supportsSQLClause', $that),
+            'relationFieldName' => $this->makeClosure('relationFieldName', $that),
             'parameters' => $this->makeClosure('parameters', $that),
         ];
     }
