@@ -71,8 +71,7 @@ final class CollectionTest extends ApiTestCase
             '@type' => 'hydra:Collection',
             'hydra:view' => [
                 '@id' => '/cars?partial=true&page=1',
-                '@type' => 'hydra:PartialCollectionView',
-                'hydra:next' => '/cars?partial=true&page=2',
+                '@type' => 'hydra:PartialCollectionView'
             ],
         ]);
 

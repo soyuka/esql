@@ -20,15 +20,19 @@ use ApiPlatform\Core\Metadata\Property\PropertyNameCollection;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Soyuka\ESQL\Bridge\ApiPlatform\Filter\FilterDescriptor;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Symfony\Component\PropertyInfo\Type;
+
 
 /**
  * @psalm-suppress UndefinedClass
  */
 class FilterDescriptorTest extends TestCase
 {
+    use ProphecyTrait;
+
     public function testGetFilterDescription(): void
     {
         $resourceMetadataFactory = $this->prophesize(ResourceMetadataFactoryInterface::class);
