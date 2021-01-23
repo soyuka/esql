@@ -21,7 +21,8 @@
         "api-platform/core": "^2.6.0-beta.1",
         "doctrine/orm": "^2.8",
         "jane-php/automapper": "^6.3",
-        "symfony/serializer": "^5.2"
+        "symfony/serializer": "^5.2",
+        "symfony/uid": "^5.2"
     },
     "suggest": {
         "doctrine/orm": "To use doctrine metadata.",

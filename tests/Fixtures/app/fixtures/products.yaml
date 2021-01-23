@@ -1,0 +1,40 @@
+Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category:
+    vegetables: 
+        name: 'Vegetables'
+        identifier: 'v'
+        children: ['@vegetables_specified', '@bagged_salads', '@herbs_aromatic']
+    vegetables_specified: 
+        name: 'Vegetables'
+        identifier: 'vegetables'
+    bagged_salads: 
+        name: 'Bagged salads'
+        identifier: 'bagged_salads'
+    herbs_aromatic: 
+        name: 'Herbs and Aromatic Plants'
+        identifier: 'herbs_aromatic'
+    fruits: 
+        name: 'Fruits'
+        identifier: 'f'
+        children: ['@fresh_fruits', '@dried_fruits']
+    fresh_fruits: 
+        name: 'Fresh Fruits'
+        identifier: 'fresh_fruits'
+    dried_fruits: 
+        name: 'Dried Fruits'
+        identifier: 'dried_fruits'
+    cold:
+        name: 'Cold'
+        identifier: 'c'
+        children: ['@cheese']
+    cheese:
+        name: 'Cheese'
+        identifier: 'cheese'
+        children: []
+
+Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product:
+    product_{1..100}:
+        gtin: '<ean13()>'
+        name: '<name()>'
+        description: '<realText(140)>'
+        categories: ['@<randomElement([vegetables_specified,bagged_salads,herbs_aromatic,fresh_fruits,dried_fruits])>']
+
