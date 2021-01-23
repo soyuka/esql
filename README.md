@@ -123,6 +123,15 @@ $connection->commit();
 
 Note that if you used a sequence you'd need to handle that yourself.
 
+### Bundle configuration
+
+```yaml
+esql:
+  mapper: Soyuka\ESQL\Bridge\Automapper\ESQLMapper
+  api-platform:
+    enabled: true
+```
+
 ## Documentation
 
 ### With Doctrine
@@ -185,6 +194,3 @@ $esql = new ESQL($managerRegistry);
 This are useful to build filters, write systems or even a custom mapper.
 
 The full interface is available as [ESQLInterface](./src/ESQLInterface.php), shortcuts are defined in [ESQL](./src/ESQL.php).
-
-## To do list
-  - ESQLMapper with symfony serializer

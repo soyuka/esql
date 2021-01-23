@@ -22,7 +22,20 @@ class ESQLExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
+        $configuration = new Configuration();
+        $config = $this->processConfiguration($configuration, $configs);
+
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
+
         $loader->load('services.php');
+
+        if ($config['api-platform']['enabled']) {
+            $loader->load('api-platform.php');
+        }
+
+        $definition = $container->getDefinition('esql.doctrine.mapper');
+        if ($definition->getClass() !== $config['mapper'] && class_exists($config['mapper'])) {
+            $definition->setClass($config['mapper']);
+        }
     }
 }

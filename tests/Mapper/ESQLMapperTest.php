@@ -11,24 +11,25 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Automapper\Tests;
+namespace Soyuka\ESQL\Mapper\Tests;
 
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
+use Soyuka\ESQL\Bridge\Symfony\Serializer\ESQLMapper as ESQLSerializerMapper;
+use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class ESQLMapperTest extends KernelTestCase
 {
-    public function testMapCar(): void
+    /**
+     * @dataProvider getMapper
+     */
+    public function testMapCar(ESQLMapperInterface $mapper): void
     {
-        self::bootKernel();
-        $container = self::$kernel->getContainer();
-        $autoMapper = $container->get(AutoMapperInterface::class);
-        $registry = $container->get('doctrine');
-
         ESQL::getAlias(Car::class);
         ESQL::getAlias(Model::class);
 
@@ -46,11 +47,24 @@ class ESQLMapperTest extends KernelTestCase
         $car2->name = 'Passat';
         $car2->model = $model;
 
-        $esql = new ESQL($registry);
-        $mapper = new ESQLMapper($autoMapper, $esql);
         $this->assertEquals([$car, $car2], $mapper->map([
             ['car_id' => '1', 'car_name' => 'Caddy', 'model_id' => '1', 'model_name' => 'Volkswagen'],
             ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],
         ], Car::class));
+    }
+
+    public function getMapper(): array
+    {
+        self::bootKernel();
+        $container = self::$kernel->getContainer();
+        $autoMapper = $container->get(AutoMapperInterface::class);
+        $registry = $container->get('doctrine');
+        $normalizer = new ObjectNormalizer();
+        $esql = new ESQL($registry);
+
+        return [
+            [new ESQLMapper($autoMapper, $esql)],
+            [new ESQLSerializerMapper($normalizer, $esql)],
+        ];
     }
 }
