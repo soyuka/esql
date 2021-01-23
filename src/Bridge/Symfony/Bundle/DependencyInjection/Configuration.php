@@ -22,6 +22,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class Configuration implements ConfigurationInterface
 {
+    /**
+     * @psalm-suppress PossiblyUndefinedMethod
+     */
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder('esql');

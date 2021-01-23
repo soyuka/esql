@@ -79,7 +79,7 @@ You'll still write SQL so I guess not? The only thing noticeable is that binded 
 
 ### What is the Mapper all about?
 
-The Mapper maps arrays received via the [PHP Data Objects (PDO) statement](https://www.php.net/manual/en/book.pdo.php) to plain PHP objects also known as Entities. This is why Object Relation Mapping is all about. Internally we're using [JanePHP](https://github.com/janephp/janephp/)'s automapper or Symfony's serializer (TBD). 
+The Mapper maps arrays received via the [PHP Data Objects (PDO) statement](https://www.php.net/manual/en/book.pdo.php) to plain PHP objects also known as Entities. This is why Object Relation Mapping is all about. Internally we're using [JanePHP](https://github.com/janephp/janephp/)'s automapper or Symfony's serializer. 
 
 ### What about writes on the API Platform bridge?
 
