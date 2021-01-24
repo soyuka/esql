@@ -120,24 +120,23 @@ class DataPaginator
 
         Context::setMode('NO_ENCLOSING_QUOTES');
         $parser = new Parser($query);
-        $statement = $parser->statements[0];
+        if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
+            $query = preg_replace('~SELECT(?!.*SELECT)~is', 'SELECT COUNT(1) AS _esql_count,', $query, 1);
+        } else {
+            $statement = $parser->statements[0];
+            $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
-        if (!$statement instanceof SelectStatement) {
-            throw new RuntimeException('No select statement found, can not count.');
-        }
-
-        $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
-
-        switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
-            case 'pdo_pgsql':
-                // Use a window with postgresql
-                if ($statement->order) {
-                    $statement->expr = [new Expression('COUNT(1) OVER ()', '_esql_count')];
-                }
-                $query = $statement->build().' LIMIT 1';
-                break;
-            default:
-                $query = $statement->build();
+            switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
+                case 'pdo_pgsql':
+                    // Use a window with postgresql
+                    if ($statement->order) {
+                        $statement->expr = [new Expression('COUNT(1) OVER ()', '_esql_count')];
+                    }
+                    $query = $statement->build().' LIMIT 1';
+                    break;
+                default:
+                    $query = $statement->build();
+            }
         }
 
         $stmt = $connection->prepare($query);

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Filter;
 
+use Doctrine\Persistence\ManagerRegistry;
 use JMS\Parser\AbstractParser;
 use JMS\Parser\SimpleLexer;
 use Soyuka\ESQL\ESQLInterface;
@@ -36,10 +37,12 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
     public const T_WORD = 8;
 
     private ESQLInterface $esql;
+    private ManagerRegistry $registry;
     private array $parameterNames = [];
 
-    public function __construct(ESQLInterface $esql)
+    public function __construct(ESQLInterface $esql, ManagerRegistry $registry)
     {
+        $this->registry = $registry;
         $this->esql = $esql;
         parent::__construct(new SimpleLexer('/
             (and)|(or)
@@ -72,7 +75,8 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
         $this->context = $context;
         $this->lexer->setInput($str);
-        ['toSQLValue' => $toSQLValue, 'supportsSQLClause' => $supportsSQLClause] = $this->esql->__invoke($context);
+        $driverName = $this->registry->getConnection()->getDriver()->getName();
+        ['toSQLValue' => $toSQLValue] = $this->esql->__invoke($context);
 
         $result = '';
         $parameters = [];
@@ -133,7 +137,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                     }
 
                     $value = $this->match(self::T_VALUE);
-                    if (!$supportsSQLClause($sqlOperator)) {
+                    if (!$this->supportsSQLClause($sqlOperator, $driverName)) {
                         throw new InvalidArgumentException("The operator '$sqlOperator' is not supported.");
                     }
 
@@ -259,5 +263,15 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         }
 
         return [self::T_UNKNOWN, $value];
+    }
+
+    private function supportsSQLClause(string $sqlClause, string $driver): bool
+    {
+        switch ($driver) {
+          case 'pdo_sqlite':
+            return 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true;
+      }
+
+        return true;
     }
 }

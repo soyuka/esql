@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
-// use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-
 interface QueryCollectionExtensionInterface
 {
     public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array;

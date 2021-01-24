@@ -17,6 +17,7 @@ use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\CollectionDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
 use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\ItemDataProvider;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\FilterExtension;
+use Soyuka\ESQL\Bridge\ApiPlatform\Extension\QueryCollectionExtensionInterface;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\SortExtension;
 use Soyuka\ESQL\Bridge\ApiPlatform\Filter\FilterDescriptor;
 use Soyuka\ESQL\Bridge\ApiPlatform\Metadata\FilterMetadataFactory;
@@ -45,6 +46,10 @@ return function (ContainerConfigurator $configurator): void {
 
     $services->set('esql.collection_extension.filters', FilterExtension::class)
         ->tag('esql.collection_extension');
+
+    $services
+        ->instanceof(QueryCollectionExtensionInterface::class)
+            ->tag('esql.collection_extension');
 
     $services->set('esql.filter.parser', FilterParser::class)->alias(FilterParserInterface::class, 'esql.filter.parser');
     $services->set('esql.filter_descriptor', FilterDescriptor::class)->tag('api_platform.filter');

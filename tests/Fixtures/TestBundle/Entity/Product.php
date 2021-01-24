@@ -1,19 +1,27 @@
 <?php
 
+/*
+ * This file is part of the ESQL project.
+ *
+ * (c) Antoine Bluchet <soyuka@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use ApiPlatform\Core\Annotation\ApiProperty;
+use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
 use Symfony\Component\Uid\Ulid;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Annotation\ApiProperty;
 
 /**
- * @ApiResource(iri="http://schema.org/Product")
- * @ORM\Entity()
+ * @ApiResource(iri="http://schema.org/Product", attributes={"esql"=true})
+ * @ORM\Entity
  */
 class Product
 {
@@ -39,18 +47,16 @@ class Product
     public string $description;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Category::class)
-     * @ORM\JoinTable(name="product_categories",
-     *   joinColumns={@ORM\JoinColumn(name="product_id", referencedColumnName="id")},
-     *   inverseJoinColumns={@ORM\JoinColumn(name="category_id", referencedColumnName="identifier")}
-     * )
+     * @ORM\ManyToOne(targetEntity=Category::class)
+     * @ORM\JoinColumn(name="category_id", referencedColumnName="identifier")
+     * @ApiProperty(readable=false)
      */
-    public Collection $categories;
+    public Category $categoryRelation;
 
     /**
      * @ApiProperty(iri="http://schema.org/category")
      */
-    public string $category;
+    private string $category = '';
 
     /**
      * @ApiProperty(iri="https://schema.org/gtin")
@@ -58,20 +64,14 @@ class Product
      */
     public string $gtin;
 
-    public function __construct()
+    public function getCategory(): string
     {
-        $this->categories = new ArrayCollection();
-    }
+        $category = $this->categoryRelation;
+        $str = $category->name;
+        while ($category = $category->parent) {
+            $str = $category->name.' / '.$str;
+        }
 
-    public function getCategories(): array
-    {
-        return $this->categories->getValues();
-    }
-
-    public function setCategories(array $categories): self
-    {
-        $this->categories = new ArrayCollection($categories);
-        return $this;
+        return $str;
     }
 }
-

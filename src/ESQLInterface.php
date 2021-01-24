@@ -41,11 +41,6 @@ interface ESQLInterface
     public function joinPredicate(string $relationClass): string;
 
     /**
-     * Relation field name.
-     */
-    public function relationFieldName(string $relationClass): string;
-
-    /**
      * Retrieves identifiers predicate, for example foo = :foo.
      * When no fields are provided it will output every columns.
      */
@@ -59,11 +54,6 @@ interface ESQLInterface
      * @return mixed
      */
     public function toSQLValue(string $fieldName, $value);
-
-    /**
-     * Whether the current driver supports an SQL clause.
-     */
-    public function supportsSQLClause(string $sqlClause): bool;
 
     /**
      * Retrieves a list of binded parameters.

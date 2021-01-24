@@ -9,6 +9,10 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category:
     bagged_salads: 
         name: 'Bagged salads'
         identifier: 'bagged_salads'
+        children: ['@iceberg']
+    iceberg: 
+        name: 'Iceberg'
+        identifier: 'iceberg'
     herbs_aromatic: 
         name: 'Herbs and Aromatic Plants'
         identifier: 'herbs_aromatic'
@@ -36,5 +40,6 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product:
         gtin: '<ean13()>'
         name: '<name()>'
         description: '<realText(140)>'
-        categories: ['@<randomElement([vegetables_specified,bagged_salads,herbs_aromatic,fresh_fruits,dried_fruits])>']
+        categoryRelation: '@<randomElement([bagged_salads,iceberg])>'
+        # categoryRelation: '@<randomElement([vegetables_specified,bagged_salads,herbs_aromatic,fresh_fruits,dried_fruits])>'
 

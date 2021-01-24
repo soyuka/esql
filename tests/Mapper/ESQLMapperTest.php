@@ -19,6 +19,7 @@ use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Bridge\Symfony\Serializer\ESQLMapper as ESQLSerializerMapper;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -53,6 +54,24 @@ class ESQLMapperTest extends KernelTestCase
         ], Car::class));
     }
 
+    /**
+     * @dataProvider getMapper
+     */
+    public function testMapCategory(ESQLMapperInterface $mapper): void
+    {
+        ESQL::getAlias(Category::class);
+
+        $vegetables = new Category();
+        $vegetables->identifier = 'v';
+        $vegetables->parent = null;
+        $category = new Category();
+        $category->identifier = 'salads';
+        $category->name = 'Salads';
+        $category->parent = $vegetables;
+
+        $this->assertEquals($category, $mapper->map(['category_identifier' => 'salads', 'category_name' => 'Salads', 'category_parent_id' => 'v'], Category::class));
+    }
+
     public function getMapper(): array
     {
         self::bootKernel();
@@ -63,8 +82,8 @@ class ESQLMapperTest extends KernelTestCase
         $esql = new ESQL($registry);
 
         return [
-            [new ESQLMapper($autoMapper, $esql)],
-            [new ESQLSerializerMapper($normalizer, $esql)],
+            [new ESQLMapper($autoMapper, $esql, $registry)],
+            [new ESQLSerializerMapper($normalizer, $esql, $registry)],
         ];
     }
 }

@@ -40,13 +40,9 @@ abstract class ESQL implements ESQLInterface
 
     abstract public function joinPredicate(string $relationClass): string;
 
-    abstract public function relationFieldName(string $relationClass): string;
-
     abstract public function predicates(?array $fields = null, string $glue = ', '): string;
 
     abstract public function toSQLValue(string $fieldName, $value);
-
-    abstract public function supportsSQLClause(string $sqlClause): bool;
 
     public function parameters(array $bindings): string
     {
@@ -93,6 +89,7 @@ abstract class ESQL implements ESQLInterface
 
         return $this->closures[$class] = [
             'table' => $that->table(),
+            'alias' => $this->getAlias($class),
             'columns' => $this->makeClosure('columns', $that),
             'column' => $this->makeClosure('column', $that),
             'identifier' => $this->makeClosure('identifierPredicate', $that),

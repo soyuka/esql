@@ -60,3 +60,8 @@ services:
         autoconfigure: true
         autowire: true
     Soyuka\ESQL\Tests\Fixtures\TestBundle\Faker\Provider\CarProvider: ~
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\Extension\CategoryFilterExtension:
+        tags: ['esql.collection_extension']
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider\ProductDataProvider:
+        tags: ['api_platform.collection_data_provider']
+        decorates: 'esql.api_platform.default.collection_data_provider'

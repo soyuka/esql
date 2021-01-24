@@ -148,9 +148,12 @@ use App\Entity\Model;
 $esql = new ESQL($managerRegistry);
 
 [
-  // The only variable here, the Table name
+  // the Table name
   // outputs "car"
   'table' => $table,
+  // the sql alias
+  // outputs "car"
+  'alias' => $alias,
   // Get columns: columns(?array $fields = null, string $glue = ', '): string
   // columns() outputs "car.id, car.name"
   'columns' => $columns,
@@ -179,9 +182,6 @@ use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 $esql = new ESQL($managerRegistry);
 
 [
-  // Relation field name: relationFieldName(string $relationClass): string
-  // relationFieldName(Model::class) outputs "model"
-  'relationFieldName' => $relationFieldName,
   // Get a normalized value for SQL, sometimes booleans are in fact integer: toSQLValue(string $fieldName, $value)
   // toSQLValue('sold', true) output "1" on sqlite but "true" on postgresql
   'toSQLValue' => $toSQLValue,
@@ -194,3 +194,14 @@ $esql = new ESQL($managerRegistry);
 This are useful to build filters, write systems or even a custom mapper.
 
 The full interface is available as [ESQLInterface](./src/ESQLInterface.php), shortcuts are defined in [ESQL](./src/ESQL.php).
+
+
+$car = $esql(Car::class);
+$model = $esql(Model::class);
+
+$query = <<<SQL
+SELECT {$car->columns()}, {$model->columns()} FROM {$car->table} 
+INNER JOIN {$model->table} ON {$car->join(Model::class)}
+WHERE {$car->identifier()}
+SQL;
+

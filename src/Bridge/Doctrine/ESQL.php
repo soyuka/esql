@@ -38,11 +38,27 @@ final class ESQL extends Base
 
     public function columns(?array $fields = null, string $glue = ', '): string
     {
-        /** @var mixed[] */
-        $fields = $fields ? array_intersect_key($this->metadata->fieldMappings, array_flip($fields)) : $this->metadata->fieldMappings;
         $alias = $this->getAlias($this->class);
+        $columns = [];
+        foreach ($this->metadata->fieldMappings as $fieldName => $fieldMapping) {
+            if ($fields && !\in_array($fieldName, $fields, true)) {
+                continue;
+            }
 
-        return implode($glue, array_map(fn ($value) => "$alias.{$value['columnName']} as {$alias}_{$value['columnName']}", $fields));
+            $columns[] = "$alias.{$fieldMapping['columnName']} as {$alias}_{$fieldName}";
+        }
+
+        foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
+            if (!isset($association['joinColumns']) || $association['sourceEntity'] !== $this->class || ($fields && !\in_array($fieldName, $fields, true))) {
+                continue;
+            }
+
+            foreach ($association['joinColumns'] as $i => $joinColumn) {
+                $columns[] = "$alias.{$joinColumn['name']} as {$alias}_{$joinColumn['name']}";
+            }
+        }
+
+        return implode($glue, $columns);
     }
 
     public function column(string $fieldName): ?string
@@ -82,18 +98,6 @@ final class ESQL extends Base
         throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
     }
 
-    public function relationFieldName(string $relationClass): string
-    {
-        $relationMetadata = $this->getClassMetadata($relationClass);
-        foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
-            if ($association['targetEntity'] === $relationClass) {
-                return $fieldName;
-            }
-        }
-
-        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
-    }
-
     public function predicates(?array $fields = null, string $glue = ', '): string
     {
         $alias = $this->getAlias($this->class);
@@ -117,16 +121,6 @@ final class ESQL extends Base
         $type = Type::getType($fieldMapping['type']);
 
         return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
-    }
-
-    public function supportsSQLClause(string $sqlClause): bool
-    {
-        switch ($this->registry->getConnection()->getDriver()->getName()) {
-          case 'pdo_sqlite':
-            return 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true;
-      }
-
-        return true;
     }
 
     public function getClassMetadata(string $class)
