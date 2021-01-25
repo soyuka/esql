@@ -63,6 +63,7 @@ services:
     Soyuka\ESQL\Tests\Fixtures\TestBundle\Extension\CategoryFilterExtension:
         tags: ['esql.collection_extension']
     Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider\ProductDataProvider:
-        tags: ['api_platform.collection_data_provider']
+        tags: 
+         - {name: 'api_platform.collection_data_provider', priority: 20}
         arguments: 
-          $decorated: 'esql.api_platform.default.collection_data_provider'
+          $decorated: '@esql.api_platform.default.collection_data_provider'

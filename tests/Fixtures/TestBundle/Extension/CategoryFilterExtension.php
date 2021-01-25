@@ -38,12 +38,12 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        if (null === $request || !$request->query->has('category') || null === $category = $request->query->get('category')) {
+        if (null === $request || !$request->query->has('category') || null === $categoryParameter = $request->query->get('category')) {
             return [$query, $parameters];
         }
 
         /** @psalm-suppress DocblockTypeContradiction */
-        if (\is_array($category)) {
+        if (\is_array($categoryParameter)) {
             throw new BadRequestHttpException();
         }
 
@@ -61,7 +61,7 @@ SELECT {$product->columns()} FROM {$product->table()}
 JOIN descendants {$category->alias()} ON {$product->join(Category::class)}
 SQL;
 
-        $parameters['category'] = $category;
+        $parameters['category'] = $categoryParameter;
 
         return [$query, $parameters];
     }

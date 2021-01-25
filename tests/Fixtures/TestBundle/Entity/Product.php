@@ -30,9 +30,8 @@ class Product
      * @ORM\Column(type="ulid", unique=true)
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class=UlidGenerator::class)
-     * @ApiProperty(identifier=false)
      */
-    public Ulid $id;
+    private Ulid $id;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -63,6 +62,18 @@ class Product
      * @ORM\Column(type="string", length=14)
      */
     public string $gtin;
+
+    public function setId(string $id): self
+    {
+        $this->id = Ulid::fromString($id);
+
+        return $this;
+    }
+
+    public function getId(): string
+    {
+        return $this->id->toRfc4122();
+    }
 
     public function getCategory(): string
     {

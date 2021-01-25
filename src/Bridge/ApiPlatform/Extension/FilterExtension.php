@@ -19,7 +19,6 @@ use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
 use Soyuka\ESQL\ESQLInterface;
-use Soyuka\ESQL\Exception\RuntimeException;
 use Soyuka\ESQL\Filter\FilterParserInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -29,6 +28,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
     private RequestStack $requestStack;
     private ESQLInterface $esql;
     private FilterParserInterface $filterParser;
+    public const REGEX_LAST_SELECT = '~WHERE(?!.*WHERE)~is';
 
     public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, RequestStack $requestStack, ESQLInterface $esql, FilterParserInterface $filterParser)
     {
@@ -77,12 +77,14 @@ final class FilterExtension implements QueryCollectionExtensionInterface
 
         Context::setMode('NO_ENCLOSING_QUOTES');
         $parser = new Parser($query);
-        $statement = $parser->statements[0];
 
-        if (!$statement instanceof SelectStatement) {
-            throw new RuntimeException('Only select statements are supported');
+        if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
+            $query .= " WHERE $filterSQL";
+
+            return [$query, $parameters];
         }
 
+        $statement = $parser->statements[0];
         if (!$statement->where) {
             $statement->where = [new Condition($filterSQL)];
         }
