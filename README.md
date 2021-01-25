@@ -176,17 +176,7 @@ $car->parameters();
 
 This are useful to build filters, write systems or even a custom mapper.
 
-The full interface is available as [ESQLInterface](./src/ESQLInterface.php), shortcuts are defined in [ESQL](./src/ESQL.php).
-
-
-$car = $esql(Car::class);
-$model = $esql(Model::class);
-
-$query = <<<SQL
-SELECT {$car->columns()}, {$model->columns()} FROM {$car->table} 
-INNER JOIN {$model->table} ON {$car->join(Model::class)}
-WHERE {$car->identifier()}
-SQL;
+The full interface is available as [ESQLInterface](./src/ESQLInterface.php).
 
 ### The Mapper
 
@@ -216,6 +206,8 @@ $this->assertEquals([$car, $car2], $mapper->map([
     ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],
 ], Car::class));
 ```
+
+There's also a Mapper built with the [`symfony/serializer`](https://symfony.com/doc/current/components/serializer.html).
 
 ### Bundle configuration
 
