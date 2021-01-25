@@ -133,11 +133,11 @@ $car = $esql(Car::class);
 
 // the Table name
 // outputs "car"
-echo $car->table;
+echo $car->table();
 
 // the sql alias
 // outputs "car"
-echo $car->alias;
+echo $car->alias();
 
 // Get columns: columns(?array $fields = null, string $glue = ', '): string
 // columns() outputs "car.id, car.name, car.model_id"
