@@ -82,13 +82,13 @@ A simple update:
 
 ```php
 <?php
-$car = new Car();
-['table' => $table, 'predicates' => $predicates, 'identifier' => $identifier] = $esql($car);
-$binding = $this->automapper->map($car, 'array'); // map your object to an array somehow
+$data = new Car();
+$car = $esql($data);
+$binding = $this->automapper->map($data, 'array'); // map your object to an array somehow
 
 $query = <<<SQL
-UPDATE {$table} SET {$predicates()}
-WHERE {$identifier()}
+UPDATE {$car->table()} SET {$car->predicates()}
+WHERE {$car->identifier()}
 SQL;
 
 $connection->beginTransaction();
@@ -101,11 +101,11 @@ Same goes for inserting value:
 
 ```php
 <?php
-$car = new Car();
-$binding = $this->automapper->map($car, 'array'); // map your object to an array somehow
-['table' => $table, 'columns' => $columns, 'parameters' => $parameters] = $esql($car);
+$data = new Car();
+$binding = $this->automapper->map($data, 'array'); // map your object to an array somehow
+$car = $esql($data)
 $query = <<<SQL
-INSERT INTO {$table} ({$columns()}) VALUES ({$parameters($binding)});
+INSERT INTO {$car->table()} ({$car->columns()}) VALUES ({$car->parameters($binding)});
 SQL;
 
 $connection->beginTransaction();
