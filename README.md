@@ -4,34 +4,27 @@ PHP Extended SQL is an alternative to the also-known DQL (Doctrine Query Languag
 
 ```php
 <?php
-use App\Car;
-use App\Model;
+use App\Entity\Car;
+use App\Entity\Model;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
-use Soyuka\ESQL\Bridge\Doctrine\ESQLMapper;
+use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 
 $connection = $managerRegistry->getConnection();
-$esql = new ESQL($managerRegistry)
-[
-  'table' => $table,
-  'identifier' => $identifier,
-  'columns' => $columns,
-  'join' => $join
-] = $esql(Car::class);
-['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
+$mapper = new ESQLMapper($autoMapper, $managerRegistry);
+$esql = new ESQL($managerRegistry, $mapper);
+$car = $esql(Car::class);
+$model = $esql(Model::class);
 
 $query = <<<SQL
-SELECT {$columns()}, {$modelColumns()} FROM {$table} 
-INNER JOIN {$modelTable} ON {$join(Model::class)}
-WHERE {$identifier()}
+SELECT {$car->columns()}, {$model->columns()} FROM {$table} 
+INNER JOIN {$model->table} ON {$car->join(Model::class)}
+WHERE {$car->identifier()}
 SQL;
 
 $stmt = $connection->prepare($query);
 $stmt->execute(['id' => 1]);
-$data = $stmt->fetch();
 
-// Use the ESQLMapper to transform this array to objects:
-$mapper = new ESQLMapper($autoMapper, $managerRegistry);
-dump($mapper->map($stmt->fetch(), Car::class));
+var_dump($esql->map($stmt->fetch()));
 ```
 
 ## API Platform bridge
@@ -123,15 +116,6 @@ $connection->commit();
 
 Note that if you used a sequence you'd need to handle that yourself.
 
-### Bundle configuration
-
-```yaml
-esql:
-  mapper: Soyuka\ESQL\Bridge\Automapper\ESQLMapper
-  api-platform:
-    enabled: true
-```
-
 ## Documentation
 
 ### With Doctrine
@@ -142,53 +126,52 @@ An ESQL instance offers a few methods to help you write SQL with the help of Doc
 <?php
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use App\Entity\Car;
-use App\Entity\Model;
 
-// Doctrine's ManagerRegistry
-$esql = new ESQL($managerRegistry);
+// Doctrine's ManagerRegistry and an ESQLMapperInterface (see below)
+$esql = new ESQL($managerRegistry, $mapper);
+$car = $esql(Car::class);
 
-[
-  // the Table name
-  // outputs "car"
-  'table' => $table,
-  // the sql alias
-  // outputs "car"
-  'alias' => $alias,
-  // Get columns: columns(?array $fields = null, string $glue = ', '): string
-  // columns() outputs "car.id, car.name"
-  'columns' => $columns,
-  // Get a single column: column(string $fieldName): string
-  // column('id') outputs "car.id"
-  'column' => $column,
-  // Get an identifier predicate: identifier(): string
-  // identifier() outputs "car.id = :id"
-  'identifier' => $identifier,
-  // Get a join predicate: join(string $relationClass): string
-  // join(Model::class) outputs "car.model_id = model.id"
-  'join' => $join,
-  // All kinds of predicates: predicates(?array $fields = null, string $glue = ', '): string
-  // predicates() outputs "car.id = :id, car.name = :name"
-  'predicates' => $predicate,
-] = $esql->__invoke(Car::class);
+// the Table name
+// outputs "car"
+echo $car->table;
+
+// the sql alias
+// outputs "car"
+echo $car->alias;
+
+// Get columns: columns(?array $fields = null, string $glue = ', '): string
+// columns() outputs "car.id, car.name, car.model_id"
+echo $car->columns();
+
+// Get a single column: column(string $fieldName): string
+// column('id') outputs "car.id"
+echo $car->column('id');
+
+// Get an identifier predicate: identifier(): string
+// identifier() outputs "car.id = :id"
+echo $car->identifier();
+
+// Get a join predicate: join(string $relationClass): string
+// join(Model::class) outputs "car.model_id = model.id"
+echo $car->join(Model::class);
+
+// All kinds of predicates: predicates(?array $fields = null, string $glue = ', '): string
+// predicates() outputs "car.id = :id, car.name = :name"
+echo $car->predicates();
 ```
 
 More advanced utilities are available as:
 
 ```php
 <?php
-use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 
-// Doctrine's ManagerRegistry
-$esql = new ESQL($managerRegistry);
+// Get a normalized value for SQL, sometimes booleans are in fact integer: toSQLValue(string $fieldName, $value)
+// toSQLValue('sold', true) output "1" on sqlite but "true" on postgresql
+$car->toSQLValue('sold', true);
 
-[
-  // Get a normalized value for SQL, sometimes booleans are in fact integer: toSQLValue(string $fieldName, $value)
-  // toSQLValue('sold', true) output "1" on sqlite but "true" on postgresql
-  'toSQLValue' => $toSQLValue,
-  // Given an array of bindings, will output keys prefixed by `:`: parameters(array $bindings): string
-  // parameters(['id' => 1, 'color' => 'blue']) will output ":id, :color"
-  'parameters' => $parameters,
-] = $esql->__invoke(Car::class);
+// Given an array of bindings, will output keys prefixed by `:`: parameters(array $bindings): string
+// parameters(['id' => 1, 'color' => 'blue']) will output ":id, :color"
+$car->parameters();
 ```
 
 This are useful to build filters, write systems or even a custom mapper.
@@ -204,4 +187,42 @@ SELECT {$car->columns()}, {$model->columns()} FROM {$car->table}
 INNER JOIN {$model->table} ON {$car->join(Model::class)}
 WHERE {$car->identifier()}
 SQL;
+
+### The Mapper
+
+#### Automapper
+
+The `ESQLMapper` transforms an array retrieved via the PDOStatement `fetch` or `fetchAll` methods to the corresponding PHP Objects.
+
+```
+// AutoMapper is an instance of JanePHP's automapper (https://github.com/janephp/automapper)
+$mapper = new ESQLMapper($autoMapper, $managerRegistry);
+$model = new Model();
+$model->id = 1;
+$model->name = 'Volkswagen';
+
+$car = new Car();
+$car->id = 1;
+$car->name = 'Caddy';
+$car->model = $model;
+
+$car2 = new Car();
+$car2->id = 2;
+$car2->name = 'Passat';
+$car2->model = $model;
+
+$this->assertEquals([$car, $car2], $mapper->map([
+    ['car_id' => '1', 'car_name' => 'Caddy', 'model_id' => '1', 'model_name' => 'Volkswagen'],
+    ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],
+], Car::class));
+```
+
+### Bundle configuration
+
+```yaml
+esql:
+  mapper: Soyuka\ESQL\Bridge\Automapper\ESQLMapper
+  api-platform:
+    enabled: true
+```
 

@@ -15,12 +15,9 @@ namespace Soyuka\ESQL;
 
 use ReflectionClass;
 
-/**
- * @psalm-type InvokeType = array{column: \Closure, columns: \Closure, identifier: \Closure, join: \Closure, parameters: \Closure, predicates: \Closure, table: string}[]
- */
 abstract class ESQL implements ESQLInterface
 {
-    /** @psalm-var InvokeType[] */
+    /** @var ESQLInterface[] */
     private array $closures = [];
     private static array $aliases = [];
     private static array $countAliases = [];
@@ -28,26 +25,36 @@ abstract class ESQL implements ESQLInterface
 
     /** @var mixed */
     protected $metadata = null;
-    protected string $class = '';
 
-    abstract public function table(): string;
+    public string $class = '';
+    public string $alias = '';
+    public string $table = '';
 
     abstract public function columns(?array $fields = null, string $glue = ', '): string;
 
     abstract public function column(string $fieldName): ?string;
 
-    abstract public function identifierPredicate(): string;
+    abstract public function identifier(): string;
 
-    abstract public function joinPredicate(string $relationClass): string;
+    abstract public function join(string $relationClass): string;
 
     abstract public function predicates(?array $fields = null, string $glue = ', '): string;
 
     abstract public function toSQLValue(string $fieldName, $value);
 
+    abstract public function map(array $data);
+
     public function parameters(array $bindings): string
     {
         return ':'.implode(', :', array_keys($bindings));
     }
+
+    /**
+     * Get class metadata.
+     *
+     * @return mixed
+     */
+    abstract protected function getClassMetadata(string $class);
 
     public static function getAlias($objectOrClass): string
     {
@@ -73,10 +80,8 @@ abstract class ESQL implements ESQLInterface
 
     /**
      * @param object|string $objectOrClass
-     *
-     * @psalm-return InvokeType
      */
-    public function __invoke($objectOrClass): array
+    public function __invoke($objectOrClass): ESQLInterface
     {
         $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
         if (isset($this->closures[$class])) {
@@ -85,25 +90,10 @@ abstract class ESQL implements ESQLInterface
 
         $that = clone $this;
         $that->class = $class;
+        $that->alias = $that->getAlias($class);
         $that->metadata = $this->getClassMetadata($class);
+        $that->table = "{$that->metadata->getTableName()} {$that->alias}";
 
-        return $this->closures[$class] = [
-            'table' => $that->table(),
-            'alias' => $this->getAlias($class),
-            'columns' => $this->makeClosure('columns', $that),
-            'column' => $this->makeClosure('column', $that),
-            'identifier' => $this->makeClosure('identifierPredicate', $that),
-            'join' => $this->makeClosure('joinPredicate', $that),
-            'predicates' => $this->makeClosure('predicates', $that),
-            'toSQLValue' => $this->makeClosure('toSQLValue', $that),
-            'supportsSQLClause' => $this->makeClosure('supportsSQLClause', $that),
-            'relationFieldName' => $this->makeClosure('relationFieldName', $that),
-            'parameters' => $this->makeClosure('parameters', $that),
-        ];
-    }
-
-    private function makeClosure(string $method, self $that): \Closure
-    {
-        return fn (): string => (string) \call_user_func_array([$that, $method], \func_get_args());
+        return $this->closures[$class] = $that;
     }
 }

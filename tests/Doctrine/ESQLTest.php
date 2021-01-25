@@ -26,18 +26,13 @@ class ESQLTest extends KernelTestCase
         $registry = $container->get('doctrine');
         $esql = new ESQL($registry);
 
-        [
-        'table' => $table,
-        'identifier' => $identifier,
-        'columns' => $columns,
-        'join' => $join
-        ] = $esql(Car::class);
-        ['table' => $modelTable, 'columns' => $modelColumns] = $esql(Model::class);
+        $car = $esql(Car::class);
+        $model = $esql(Model::class);
 
         $query = <<<SQL
-        SELECT {$columns()}, {$modelColumns()} FROM {$table}
-        INNER JOIN {$modelTable} ON {$join(Model::class)}
-        WHERE {$identifier()}
+        SELECT {$car->columns()}, {$model->columns()} FROM {$car->table}
+        INNER JOIN {$model->table} ON {$car->join(Model::class)}
+        WHERE {$car->identifier()}
         SQL;
 
         $this->assertSame($query, 'SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car.model_id as car_model_id, model.id as model_id, model.name as model_name FROM Car car
@@ -54,12 +49,10 @@ WHERE car.id = :id'
         $registry = $container->get('doctrine');
         $esql = new ESQL($registry);
 
-        [
-        'columns' => $columns,
-        ] = $esql(Car::class);
+        $car = $esql(Car::class);
 
-        $this->assertEquals($columns(['name'], '|'), 'car.name as car_name');
-        $this->assertEquals($columns(['name', 'price'], '|'), 'car.name as car_name|car.price as car_price');
+        $this->assertEquals($car->columns(['name'], '|'), 'car.name as car_name');
+        $this->assertEquals($car->columns(['name', 'price'], '|'), 'car.name as car_name|car.price as car_price');
     }
 
     protected function setUp(): void

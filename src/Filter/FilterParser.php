@@ -76,7 +76,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         $this->context = $context;
         $this->lexer->setInput($str);
         $driverName = $this->registry->getConnection()->getDriver()->getName();
-        ['toSQLValue' => $toSQLValue] = $this->esql->__invoke($context);
+        $esql = $this->esql->__invoke($context);
 
         $result = '';
         $parameters = [];
@@ -153,7 +153,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                             $value = str_replace('*', '%', $value);
                         }
 
-                        $parameters[$uniqueParameterName] = $toSQLValue($parameterName, $value);
+                        $parameters[$uniqueParameterName] = $esql->toSQLValue($parameterName, $value);
                     }
                 }
             }
@@ -224,7 +224,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
      */
     public function determineTypeAndValue($value): array
     {
-        ['column' => $column] = $this->esql->__invoke($this->context);
+        $esql = $this->esql->__invoke($this->context);
         if ('and' === $value) {
             return [self::T_AND, 'and'];
         }
@@ -245,7 +245,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
             return [self::T_COLON, $value];
         }
 
-        if (\is_string($value) && ($col = $column($value))) {
+        if (\is_string($value) && ($col = $esql->column($value))) {
             return [self::T_WORD, [$value, $col]];
         }
 

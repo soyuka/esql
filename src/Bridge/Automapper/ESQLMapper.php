@@ -17,20 +17,17 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\ESQL;
-use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQLMapper implements ESQLMapperInterface
 {
     private AutoMapperInterface $automapper;
-    private ESQLInterface $esql;
     private ManagerRegistry $registry;
 
-    public function __construct(AutoMapperInterface $automapper, ESQLInterface $esql, ManagerRegistry $registry)
+    public function __construct(AutoMapperInterface $automapper, ManagerRegistry $registry)
     {
         $this->automapper = $automapper;
-        $this->esql = $esql;
         $this->registry = $registry;
     }
 

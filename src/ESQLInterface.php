@@ -16,11 +16,6 @@ namespace Soyuka\ESQL;
 interface ESQLInterface
 {
     /**
-     * Retrieves the Table name for the given resource.
-     */
-    public function table(): string;
-
-    /**
      * Retrieves columns for a given resource.
      */
     public function columns(?array $fields = null, string $glue = ', '): string;
@@ -33,12 +28,12 @@ interface ESQLInterface
     /**
      * Retrieves identifiers predicate, for example id = :id.
      */
-    public function identifierPredicate(): string;
+    public function identifier(): string;
 
     /**
      * Retrieves join predicate, for example car.model_id = model.id.
      */
-    public function joinPredicate(string $relationClass): string;
+    public function join(string $relationClass): string;
 
     /**
      * Retrieves identifiers predicate, for example foo = :foo.
@@ -56,6 +51,15 @@ interface ESQLInterface
     public function toSQLValue(string $fieldName, $value);
 
     /**
+     * Map the array data to the class.
+     *
+     * If we had generics we'd type this to $this->class
+     *
+     * @return mixed
+     */
+    public function map(array $data);
+
+    /**
      * Retrieves a list of binded parameters.
      * more a helper for persistence not used.
      */
@@ -66,14 +70,7 @@ interface ESQLInterface
      *
      * @param object|string $objectOrClass
      */
-    public function __invoke($objectOrClass): array;
-
-    /**
-     * Get class metadata.
-     *
-     * @return mixed
-     */
-    public function getClassMetadata(string $class);
+    public function __invoke($objectOrClass): self;
 
     /**
      * Get the class alias.

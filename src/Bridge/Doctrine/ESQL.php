@@ -16,24 +16,20 @@ namespace Soyuka\ESQL\Bridge\Doctrine;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use Soyuka\ESQL\ESQL as Base;
+use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQL extends Base
 {
     private ManagerRegistry $registry;
+    private ?ESQLMapperInterface $mapper;
 
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, ?ESQLMapperInterface $mapper = null)
     {
         $this->registry = $registry;
-    }
-
-    public function table(): string
-    {
-        $metadata = $this->getClassMetadata($this->class);
-        $alias = $this->getAlias($this->class);
-
-        return "{$metadata->getTableName()} $alias";
+        $this->mapper = $mapper;
     }
 
     public function columns(?array $fields = null, string $glue = ', '): string
@@ -71,12 +67,12 @@ final class ESQL extends Base
         return "{$this->getAlias($this->class)}.{$fieldMapping['columnName']}";
     }
 
-    public function identifierPredicate(): string
+    public function identifier(): string
     {
         return $this->predicates($this->metadata->getIdentifierFieldNames(), ' AND ');
     }
 
-    public function joinPredicate(string $relationClass): string
+    public function join(string $relationClass): string
     {
         $alias = $this->getAlias($this->class);
         $relationMetadata = $this->getClassMetadata($relationClass);
@@ -123,7 +119,16 @@ final class ESQL extends Base
         return $type->convertToDatabaseValue($value, $this->registry->getConnection()->getDatabasePlatform());
     }
 
-    public function getClassMetadata(string $class)
+    public function map(array $data)
+    {
+        if (null === $this->mapper) {
+            throw new LogicException('Mapper not available.');
+        }
+
+        return $this->mapper->map($data, $this->class);
+    }
+
+    protected function getClassMetadata(string $class)
     {
         $manager = $this->registry->getManagerForClass($class);
         if (!$manager) {

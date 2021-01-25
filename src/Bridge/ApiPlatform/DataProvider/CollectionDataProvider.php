@@ -55,10 +55,10 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $table, 'columns' => $columns] = $this->esql->__invoke($resourceClass);
+        $esql = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT {$columns()} FROM {$table}
+        SELECT {$esql->columns()} FROM {$esql->table}
 SQL;
 
         $parameters = [];

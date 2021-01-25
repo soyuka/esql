@@ -46,11 +46,11 @@ final class FilterExtension implements QueryCollectionExtensionInterface
             return [$query, $parameters];
         }
 
-        ['column' => $column] = $this->esql->__invoke($resourceClass);
+        $esql = $this->esql->__invoke($resourceClass);
         $filterQuery = '';
         $propFilters = [];
         foreach ($request->query->all() as $key => $value) {
-            if ('or' === $key || 'and' === $key || !$column($key)) {
+            if ('or' === $key || 'and' === $key || !$esql->column($key)) {
                 continue;
             }
 
