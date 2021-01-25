@@ -40,6 +40,7 @@ class DataPaginator
     private bool $partialPaginationEnabled;
     private ?string $clientPartialPagination;
     private string $partialPaginationParameterName;
+    const REGEX_LAST_SELECT = '~SELECT(?!.*SELECT)~is';
 
     public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ResourceMetadataFactoryInterface $resourceMetadataFactory, ESQLMapperInterface $mapper, PaginationOptions $paginationOptions, ?int $itemsPerPage = 30, ?int $maximumItemsPerPage = null, bool $partialPaginationEnabled = false, ?string $clientPartialPagination = null, string $partialPaginationParameterName = 'partial')
     {
@@ -117,16 +118,23 @@ class DataPaginator
     protected function count(string $query, array $parameters = []): float
     {
         $connection = $this->managerRegistry->getConnection();
+        $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
 
         Context::setMode('NO_ENCLOSING_QUOTES');
         $parser = new Parser($query);
         if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
-            $query = preg_replace('~SELECT(?!.*SELECT)~is', 'SELECT COUNT(1) AS _esql_count,', $query, 1);
+            switch ($driverName) {
+                case 'pdo_pgsql':
+                    $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
+                    break;
+                default:
+                    $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) AS _esql_count,', $query, 1);
+            }
         } else {
             $statement = $parser->statements[0];
             $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
-            switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
+            switch ($driverName) {
                 case 'pdo_pgsql':
                     // Use a window with postgresql
                     if ($statement->order) {
