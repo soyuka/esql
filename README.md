@@ -27,6 +27,8 @@ $stmt->execute(['id' => 1]);
 var_dump($esql->map($stmt->fetch()));
 ```
 
+[Jump to the documentation](#documentation)
+
 ## API Platform bridge
 
 This package comes with an API Platform bridge that supports filters and pagination. To use our bridge, use the `esql` attribute:
