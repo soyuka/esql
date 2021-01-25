@@ -80,7 +80,7 @@ interface ESQLInterface
      *
      * @param object|string $objectOrClass
      */
-    public function __invoke($objectOrClass): ESQLInterface;
+    public function __invoke($objectOrClass): self;
 
     /**
      * Get the class alias.

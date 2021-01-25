@@ -42,7 +42,7 @@ final class DataPersister implements DataPersisterInterface, ContextAwareDataPer
     {
         $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
-        /** @var array **/
+        /** @var array */
         $binding = $this->automapper->map($data, 'array');
 
         if ($context['previous_data'] ?? null) {

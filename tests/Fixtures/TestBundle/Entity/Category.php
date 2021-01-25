@@ -31,7 +31,7 @@ class Category
     public string $name;
 
     /**
-     * @ORM\Column(type="string", length=10)
+     * @ORM\Column(type="string", length=30)
      * @ORM\Id
      * @ApiProperty(iri="http://schema.org/identifier", identifier=true)
      */
