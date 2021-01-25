@@ -49,7 +49,7 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
         $esql = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT * FROM {$esql->table} WHERE {$esql->identifier()}
+        SELECT * FROM {$esql->table()} WHERE {$esql->identifier()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($id);

@@ -53,8 +53,6 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $connection = $this->managerRegistry->getConnection();
-        ['table' => $table, 'columns' => $columns] = $this->esql->__invoke($resourceClass);
-
         $data = $this->decorated->getCollection($resourceClass, $operationName, $context);
         $categories = $this->getCategories();
 
@@ -75,15 +73,15 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
 
     private function getCategories(): array
     {
-        $category = null === ($request = $this->requestStack->getCurrentRequest()) ? null : $request->query->get('category');
+        $categoryParameter = null === ($request = $this->requestStack->getCurrentRequest()) ? null : $request->query->get('category');
         /** @psalm-suppress DocblockTypeContradiction */
-        if (\is_array($category)) {
+        if (\is_array($categoryParameter)) {
             throw new BadRequestHttpException();
         }
 
         $connection = $this->managerRegistry->getConnection();
-        $categoryPredicate = $category ? 'c.identifier = :category' : 'c.parent_id IS NULL';
-        ['table' => $table, 'columns' => $columns, 'join' => $join] = $this->esql->__invoke(Category::class);
+        $categoryPredicate = $categoryParameter ? 'c.identifier = :category' : 'c.parent_id IS NULL';
+        $category = $this->esql->__invoke(Category::class);
         $alias = ESQL::getAlias(Category::class);
 
         $query = <<<SQL
@@ -98,12 +96,12 @@ WITH
         UNION ALL
         SELECT c.identifier, c.name, c.parent_id FROM descendants, category c WHERE c.parent_id = descendants.identifier
     )
-SELECT {$columns()} FROM ancestors {$alias}
+SELECT {$category->columns()} FROM ancestors {$category->alias()}
 UNION
-SELECT {$columns()} FROM descendants {$alias}
+SELECT {$category->columns()} FROM descendants {$category->alias()}
 SQL;
 
-        $stmt = $connection->executeQuery($query, $category ? ['category' => $category] : []);
+        $stmt = $connection->executeQuery($query, $categoryParameter ? ['category' => $categoryParameter] : []);
         $data = $stmt->fetchAll();
         $categories = $this->mapper->map($data, Category::class);
 

@@ -40,18 +40,19 @@ final class DataPersister implements DataPersisterInterface, ContextAwareDataPer
      */
     public function persist($data, array $context = [])
     {
-        ['table' => $Table, 'columns' => $Columns, 'parameters' => $Parameters, 'predicates' => $Predicates, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($data);
+        $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
+        /** @var array **/
         $binding = $this->automapper->map($data, 'array');
 
         if ($context['previous_data'] ?? null) {
             $query = <<<SQL
-            UPDATE {$Table()} SET {$Predicates()}
-            WHERE {$IdentifierPredicate()}
+            UPDATE {$esql->table()} SET {$esql->predicates()}
+            WHERE {$esql->identifier()}
 SQL;
         } else {
             $query = <<<SQL
-            INSERT INTO {$Table()} ({$Columns()}) VALUES ({$Parameters($binding)});
+            INSERT INTO {$esql->table()} ({$esql->columns()}) VALUES ({$esql->parameters($binding)});
 SQL;
         }
 
@@ -61,7 +62,7 @@ SQL;
         $connection->commit();
 
         $query = <<<SQL
-        SELECT * FROM {$Table()} WHERE {$IdentifierPredicate()}
+        SELECT * FROM {$esql->table()} WHERE {$esql->identifier()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute(['id' => ($context['previous_data'] ?? null) ? $context['previous_data']->getId() : $connection->lastInsertId()]);
@@ -76,11 +77,11 @@ SQL;
      */
     public function remove($data, array $context = []): void
     {
-        ['table' => $Table, 'identifierPredicate' => $IdentifierPredicate] = $this->esql->__invoke($data);
+        $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
         $connection->beginTransaction();
         $query = <<<SQL
-        DELETE FROM {$Table($data)} WHERE {$IdentifierPredicate($data)}
+        DELETE FROM {$esql->table()} WHERE {$esql->identifier()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute(['id' => $data->getId()]);

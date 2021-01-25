@@ -25,10 +25,13 @@ abstract class ESQL implements ESQLInterface
 
     /** @var mixed */
     protected $metadata = null;
-
+    protected string $alias = '';
+    protected string $table = '';
     public string $class = '';
-    public string $alias = '';
-    public string $table = '';
+
+    abstract public function table(): string;
+
+    abstract public function alias(): string;
 
     abstract public function columns(?array $fields = null, string $glue = ', '): string;
 

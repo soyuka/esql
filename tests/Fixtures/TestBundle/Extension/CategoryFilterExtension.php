@@ -47,8 +47,8 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
             throw new BadRequestHttpException();
         }
 
-        ['column' => $column, 'join' => $join, 'columns' => $columns, 'table' => $table] = $this->esql->__invoke($resourceClass);
-        ['columns' => $categoryColumns, 'alias' => $categoryAlias] = $this->esql->__invoke(Category::class);
+        $product = $this->esql->__invoke($resourceClass);
+        $category = $this->esql->__invoke(Category::class);
 
         $query = <<<SQL
 WITH
@@ -57,8 +57,8 @@ WITH
         UNION ALL
         SELECT c.identifier, c.name, c.parent_id FROM descendants, category c WHERE c.parent_id = descendants.identifier
     )
-SELECT {$columns()} FROM $table
-JOIN descendants {$categoryAlias} ON {$join(Category::class)}
+SELECT {$product->columns()} FROM {$product->table()}
+JOIN descendants {$category->alias()} ON {$product->join(Category::class)}
 SQL;
 
         $parameters['category'] = $category;

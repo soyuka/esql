@@ -30,8 +30,8 @@ class ESQLTest extends KernelTestCase
         $model = $esql(Model::class);
 
         $query = <<<SQL
-        SELECT {$car->columns()}, {$model->columns()} FROM {$car->table}
-        INNER JOIN {$model->table} ON {$car->join(Model::class)}
+        SELECT {$car->columns()}, {$model->columns()} FROM {$car->table()}
+        INNER JOIN {$model->table()} ON {$car->join(Model::class)}
         WHERE {$car->identifier()}
         SQL;
 

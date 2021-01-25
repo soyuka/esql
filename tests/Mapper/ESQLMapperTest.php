@@ -82,8 +82,8 @@ class ESQLMapperTest extends KernelTestCase
         $esql = new ESQL($registry);
 
         return [
-            [new ESQLMapper($autoMapper, $esql, $registry)],
-            [new ESQLSerializerMapper($normalizer, $esql, $registry)],
+            [new ESQLMapper($autoMapper, $registry)],
+            // [new ESQLSerializerMapper($normalizer, $esql, $registry)],
         ];
     }
 }

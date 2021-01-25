@@ -32,6 +32,16 @@ final class ESQL extends Base
         $this->mapper = $mapper;
     }
 
+    public function table(): string
+    {
+        return $this->table;
+    }
+
+    public function alias(): string
+    {
+        return $this->alias;
+    }
+
     public function columns(?array $fields = null, string $glue = ', '): string
     {
         $alias = $this->getAlias($this->class);

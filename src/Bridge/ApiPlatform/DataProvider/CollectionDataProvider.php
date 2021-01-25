@@ -58,7 +58,7 @@ final class CollectionDataProvider implements RestrictedDataProviderInterface, C
         $esql = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT {$esql->columns()} FROM {$esql->table}
+        SELECT {$esql->columns()} FROM {$esql->table()}
 SQL;
 
         $parameters = [];
