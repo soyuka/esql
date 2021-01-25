@@ -40,7 +40,7 @@ class ESQLTest extends KernelTestCase
         WHERE {$identifier()}
         SQL;
 
-        $this->assertSame($query, 'SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car.model_id as car_model, model.id as model_id, model.name as model_name FROM Car car
+        $this->assertSame($query, 'SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car.model_id as car_model_id, model.id as model_id, model.name as model_name FROM Car car
 INNER JOIN Model model ON model.id = car.model_id
 WHERE car.id = :id'
         );

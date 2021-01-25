@@ -64,4 +64,5 @@ services:
         tags: ['esql.collection_extension']
     Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider\ProductDataProvider:
         tags: ['api_platform.collection_data_provider']
-        decorates: 'esql.api_platform.default.collection_data_provider'
+        arguments: 
+          $decorated: 'esql.api_platform.default.collection_data_provider'

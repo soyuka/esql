@@ -34,7 +34,7 @@ class FilterParserTest extends KernelTestCase
         $registry = $container->get('doctrine');
 
         $esql = new ESQL($registry);
-        $filterParser = new FilterParser($esql);
+        $filterParser = new FilterParser($esql, $registry);
         ESQL::getAlias(Car::class);
         ESQL::getAlias(Model::class);
 
@@ -80,7 +80,7 @@ class FilterParserTest extends KernelTestCase
         }
 
         $esql = new ESQL($registry);
-        $filterParser = new FilterParser($esql);
+        $filterParser = new FilterParser($esql, $registry);
         ESQL::getAlias(Car::class);
         ESQL::getAlias(Model::class);
 

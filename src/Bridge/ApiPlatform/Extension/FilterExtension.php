@@ -72,6 +72,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         }
 
         [$filterSQL, $filterParameters] = $this->filterParser->parse($filterQuery, $resourceClass);
+
         $parameters = $filterParameters + $parameters;
 
         Context::setMode('NO_ENCLOSING_QUOTES');

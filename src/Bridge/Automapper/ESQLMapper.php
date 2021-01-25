@@ -77,7 +77,7 @@ final class ESQLMapper implements ESQLMapperInterface
         return $data;
     }
 
-    private function getClassMetadata(string $class)
+    private function getClassMetadata(string $class): ClassMetadataInfo
     {
         $manager = $this->registry->getManagerForClass($class);
         if (!$manager) {

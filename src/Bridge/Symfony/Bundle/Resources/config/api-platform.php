@@ -41,15 +41,15 @@ return function (ContainerConfigurator $configurator): void {
         ->tag('api_platform.collection_data_provider', ['priority' => 10])
         ->arg('$collectionExtensions', tagged_iterator('esql.collection_extension'));
 
+    $services
+        ->instanceof(QueryCollectionExtensionInterface::class)
+            ->tag('esql.collection_extension');
+
     $services->set('esql.collection_extension.sort', SortExtension::class)
         ->tag('esql.collection_extension');
 
     $services->set('esql.collection_extension.filters', FilterExtension::class)
         ->tag('esql.collection_extension');
-
-    $services
-        ->instanceof(QueryCollectionExtensionInterface::class)
-            ->tag('esql.collection_extension');
 
     $services->set('esql.filter.parser', FilterParser::class)->alias(FilterParserInterface::class, 'esql.filter.parser');
     $services->set('esql.filter_descriptor', FilterDescriptor::class)->tag('api_platform.filter');

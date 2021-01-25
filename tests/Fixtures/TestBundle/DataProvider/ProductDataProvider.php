@@ -87,7 +87,7 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
         $alias = ESQL::getAlias(Category::class);
 
         $query = <<<SQL
-WITH RECURSIVE
+WITH
     ancestors(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE {$categoryPredicate}
         UNION ALL
