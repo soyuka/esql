@@ -184,7 +184,7 @@ The full interface is available as [ESQLInterface](./src/ESQLInterface.php).
 
 The `ESQLMapper` transforms an array retrieved via the PDOStatement `fetch` or `fetchAll` methods to the corresponding PHP Objects.
 
-```
+```php
 // AutoMapper is an instance of JanePHP's automapper (https://github.com/janephp/automapper)
 $mapper = new ESQLMapper($autoMapper, $managerRegistry);
 $model = new Model();
