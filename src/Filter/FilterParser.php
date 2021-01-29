@@ -237,7 +237,8 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         if (')' === $value) {
             return [self::T_CLOSE, ')'];
         }
-        if (1 === preg_match('(eq|gt|gte|lte|lt|neq|like|ilike|in|is)', $value)) {
+
+        if (1 === preg_match('~^(not\.)?(eq|gt|gte|lte|lt|neq|like|ilike|in|is)$~', $value)) {
             return [self::T_OPERATOR, $this->operatorToSQLCondition($value)];
         }
 

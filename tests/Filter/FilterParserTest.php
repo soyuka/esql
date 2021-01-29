@@ -62,6 +62,11 @@ class FilterParserTest extends KernelTestCase
             'and(name.not.in.(a,b,c))',
             ['car.name NOT IN (:name_1,:name_2,:name_3)', ['name_1' => 'a', 'name_2' => 'b', 'name_3' => 'c']],
         ];
+
+        yield [
+            'and(name.like.*looking*)',
+            ['car.name LIKE :name_1', ['name_1' => '%looking%']],
+        ];
     }
 
     /**
