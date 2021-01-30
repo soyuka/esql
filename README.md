@@ -27,7 +27,7 @@ $stmt->execute(['id' => 1]);
 var_dump($esql->map($stmt->fetch()));
 ```
 
-[Jump to the documentation](#documentation)
+[Jump to the documentation](#documentation) or [read this blog article](https://soyuka.me/esql-alternative-to-doctrine-query-language-why/) to know more.
 
 ## API Platform bridge
 
