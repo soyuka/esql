@@ -219,4 +219,3 @@ esql:
   api-platform:
     enabled: true
 ```
-

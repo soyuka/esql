@@ -51,7 +51,7 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
         $category = $this->esql->__invoke(Category::class);
 
         $query = <<<SQL
-WITH
+WITH RECURSIVE
     descendants(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE c.identifier = :category
         UNION ALL

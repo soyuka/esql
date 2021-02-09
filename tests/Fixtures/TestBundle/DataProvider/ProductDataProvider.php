@@ -22,14 +22,11 @@ use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product;
-use Soyuka\ESQL\Tests\Fixtures\TestBundle\Query\CategoriesTrait;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class ProductDataProvider implements RestrictedDataProviderInterface, CollectionDataProviderInterface, ContextAwareCollectionDataProviderInterface
 {
-    use CategoriesTrait;
-
     private RequestStack $requestStack;
     private ManagerRegistry $managerRegistry;
     private ESQLMapperInterface $mapper;
@@ -52,7 +49,6 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
 
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
-        $connection = $this->managerRegistry->getConnection();
         $data = $this->decorated->getCollection($resourceClass, $operationName, $context);
         $categories = $this->getCategories();
 
@@ -82,10 +78,9 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
         $connection = $this->managerRegistry->getConnection();
         $categoryPredicate = $categoryParameter ? 'c.identifier = :category' : 'c.parent_id IS NULL';
         $category = $this->esql->__invoke(Category::class);
-        $alias = ESQL::getAlias(Category::class);
 
         $query = <<<SQL
-WITH
+WITH RECURSIVE
     ancestors(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE {$categoryPredicate}
         UNION ALL
