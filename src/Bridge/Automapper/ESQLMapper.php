@@ -96,11 +96,11 @@ final class ESQLMapper implements ESQLMapperInterface
     private function relationFieldName(string $class, string $relationClass): ?string
     {
         $metadata = $this->getClassMetadata($class);
-        if (!$metadata) {
+        $relationMetadata = $this->getClassMetadata($relationClass);
+        if (!$metadata || !$relationMetadata) {
             return null;
         }
 
-        $relationMetadata = $this->getClassMetadata($relationClass);
         foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
             if ($association['targetEntity'] === $relationClass) {
                 return $fieldName;

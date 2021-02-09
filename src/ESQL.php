@@ -94,7 +94,6 @@ abstract class ESQL implements ESQLInterface
 
         $that = clone $this;
         $that->class = $class;
-        $that->aliasTo = $aliasTo;
         $that->alias = $aliasTo ? $that->getAlias($aliasTo) : $that->getAlias($class);
         $that->metadata = $this->getClassMetadata($class);
 
