@@ -33,7 +33,7 @@ abstract class ESQL implements ESQLInterface
 
     abstract public function alias(): string;
 
-    abstract public function columns(?array $fields = null, string $glue = ', '): string;
+    abstract public function columns(?array $fields = null, int $output = self::AS_STRING);
 
     abstract public function column(string $fieldName): ?string;
 
@@ -84,19 +84,28 @@ abstract class ESQL implements ESQLInterface
     /**
      * @param object|string $objectOrClass
      */
-    public function __invoke($objectOrClass): ESQLInterface
+    public function __invoke($objectOrClass, ?string $aliasTo = null): ESQLInterface
     {
         $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
-        if (isset($this->closures[$class])) {
-            return $this->closures[$class];
+        $key = $class.($aliasTo ?: '');
+        if (isset($this->closures[$key])) {
+            return $this->closures[$key];
         }
 
         $that = clone $this;
         $that->class = $class;
-        $that->alias = $that->getAlias($class);
+        $that->aliasTo = $aliasTo;
+        $that->alias = $aliasTo ? $that->getAlias($aliasTo) : $that->getAlias($class);
         $that->metadata = $this->getClassMetadata($class);
-        $that->table = "{$that->metadata->getTableName()} {$that->alias}";
 
-        return $this->closures[$class] = $that;
+        if ($aliasTo) {
+            self::$aliases[$class] = $that->alias;
+            self::$classAliases[$that->alias] = $aliasTo;
+        }
+
+        $schema = $that->metadata->getSchemaName() ? $that->metadata->getSchemaName().'.' : '';
+        $that->table = "{$schema}{$that->metadata->getTableName()} {$that->alias}";
+
+        return $this->closures[$key] = $that;
     }
 }

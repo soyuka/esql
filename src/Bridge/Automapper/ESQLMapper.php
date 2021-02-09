@@ -42,7 +42,7 @@ final class ESQLMapper implements ESQLMapperInterface
 
             $aliasPos = strpos($key, '_');
             if (false === $aliasPos) {
-                throw new RuntimeException('No alias found');
+                continue;
             }
 
             $alias = substr($key, 0, $aliasPos);
@@ -64,7 +64,11 @@ final class ESQLMapper implements ESQLMapperInterface
             $normalized = $memory[$resourceClass];
             unset($memory[$resourceClass]);
             foreach ($memory as $class => $value) {
-                $normalized[$this->relationFieldName($resourceClass, $class)] = $value;
+                if (!$relationFieldName = $this->relationFieldName($resourceClass, $class)) {
+                    continue;
+                }
+
+                $normalized[$relationFieldName] = $value;
                 unset($memory[$class]);
             }
 
@@ -74,24 +78,28 @@ final class ESQLMapper implements ESQLMapperInterface
         return $data;
     }
 
-    private function getClassMetadata(string $class): ClassMetadataInfo
+    private function getClassMetadata(string $class): ?ClassMetadataInfo
     {
         $manager = $this->registry->getManagerForClass($class);
         if (!$manager) {
-            throw new RuntimeException('No manager for class '.$class);
+            return null;
         }
 
         $classMetadata = $manager->getClassMetadata($class);
         if (!$classMetadata instanceof ClassMetadataInfo) {
-            throw new RuntimeException('No class metadata for class '.$class);
+            return null;
         }
 
         return $classMetadata;
     }
 
-    private function relationFieldName(string $class, string $relationClass): string
+    private function relationFieldName(string $class, string $relationClass): ?string
     {
         $metadata = $this->getClassMetadata($class);
+        if (!$metadata) {
+            return null;
+        }
+
         $relationMetadata = $this->getClassMetadata($relationClass);
         foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
             if ($association['targetEntity'] === $relationClass) {
@@ -105,6 +113,9 @@ final class ESQLMapper implements ESQLMapperInterface
     private function getAssociation(string $class, string $columnName): ?array
     {
         $metadata = $this->getClassMetadata($class);
+        if (!$metadata) {
+            return null;
+        }
         foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
             foreach ($association['joinColumns'] ?? [] as $column) {
                 if ($column['name'] === $columnName) {

@@ -42,16 +42,20 @@ final class ESQL extends Base
         return $this->alias;
     }
 
-    public function columns(?array $fields = null, string $glue = ', '): string
+    public function columns(?array $fields = null, int $output = self::AS_STRING)
     {
         $alias = $this->getAlias($this->class);
         $columns = [];
+        $onlyColumnNames = $output & self::WITHOUT_ALIASES;
+
         foreach ($this->metadata->fieldMappings as $fieldName => $fieldMapping) {
             if ($fields && !\in_array($fieldName, $fields, true)) {
                 continue;
             }
 
-            $columns[] = "$alias.{$fieldMapping['columnName']} as {$alias}_{$fieldName}";
+            $columnName = "$alias.{$fieldMapping['columnName']}";
+            $aliased = " as {$alias}_{$fieldName}";
+            $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
         }
 
         foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
@@ -60,11 +64,13 @@ final class ESQL extends Base
             }
 
             foreach ($association['joinColumns'] as $i => $joinColumn) {
-                $columns[] = "$alias.{$joinColumn['name']} as {$alias}_{$joinColumn['name']}";
+                $columnName = "$alias.{$joinColumn['name']}";
+                $aliased = " as {$alias}_{$joinColumn['name']}";
+                $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
             }
         }
 
-        return implode($glue, $columns);
+        return $output & self::AS_ARRAY ? $columns : implode(', ', $columns);
     }
 
     public function column(string $fieldName): ?string

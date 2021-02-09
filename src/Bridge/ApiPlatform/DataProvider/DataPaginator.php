@@ -41,6 +41,8 @@ class DataPaginator
     private ?string $clientPartialPagination;
     private string $partialPaginationParameterName;
     public const REGEX_LAST_SELECT = '~SELECT(?!.*SELECT)~is';
+    public const ORDER_BY = 'esql_order_by';
+    public const MAP_TO = 'esql_map_to';
 
     public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ResourceMetadataFactoryInterface $resourceMetadataFactory, ESQLMapperInterface $mapper, PaginationOptions $paginationOptions, ?int $itemsPerPage = 30, ?int $maximumItemsPerPage = null, bool $partialPaginationEnabled = false, ?string $clientPartialPagination = null, string $partialPaginationParameterName = 'partial')
     {
@@ -105,12 +107,30 @@ class DataPaginator
 
         $firstResult = ($page - 1) * $itemsPerPage;
         $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters);
-        $query = $query.' LIMIT '.$itemsPerPage.' OFFSET '.$firstResult;
+
+        $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
+        switch ($driverName) {
+            case 'pdo_sqlsrv':
+                if (!isset($context[self::ORDER_BY])) {
+                    throw new RuntimeException('An ORDER_BY clause is needed to use ROW_NUMBER');
+                }
+
+                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$context[self::ORDER_BY]}) AS RowNumber,", $query, 1);
+                $query = <<<SQL
+$query
+) AS paginated
+WHERE RowNumber BETWEEN $firstResult AND $itemsPerPage
+SQL;
+                break;
+            default:
+            $query = $query.' LIMIT '.$itemsPerPage.' OFFSET '.$firstResult;
+        }
+
         $connection = $this->managerRegistry->getConnection();
         $stmt = $connection->prepare($query);
         $stmt->execute($parameters);
         $data = $stmt->fetchAll();
-        $data = $this->mapper->map($data, $resourceClass);
+        $data = $this->mapper->map($data, $context[self::MAP_TO] ?? $resourceClass);
 
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
     }

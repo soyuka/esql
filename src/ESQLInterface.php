@@ -15,6 +15,10 @@ namespace Soyuka\ESQL;
 
 interface ESQLInterface
 {
+    public const AS_STRING = 1;
+    public const AS_ARRAY = 2;
+    public const WITHOUT_ALIASES = 4;
+
     /**
      * Retrieves the table.
      */
@@ -27,8 +31,10 @@ interface ESQLInterface
 
     /**
      * Retrieves columns for a given resource.
+     *
+     * @return string|string[]
      */
-    public function columns(?array $fields = null, string $glue = ', '): string;
+    public function columns(?array $fields = null, int $output = self::AS_STRING);
 
     /**
      * Retrieves a column for a given resource.
@@ -80,7 +86,7 @@ interface ESQLInterface
      *
      * @param object|string $objectOrClass
      */
-    public function __invoke($objectOrClass): self;
+    public function __invoke($objectOrClass, ?string $aliasTo = null): self;
 
     /**
      * Get the class alias.

@@ -141,8 +141,9 @@ echo $car->table();
 // outputs "car"
 echo $car->alias();
 
-// Get columns: columns(?array $fields = null, string $glue = ', '): string
+// Get columns: columns(?array $fields = null, string $output = $car::AS_STRING): string
 // columns() outputs "car.id, car.name, car.model_id"
+// output can also take: $car::AS_ARRAY | $car::WITHOUT_ALIASES
 echo $car->columns();
 
 // Get a single column: column(string $fieldName): string
@@ -177,6 +178,17 @@ $car->parameters();
 ```
 
 This are useful to build filters, write systems or even a custom mapper.
+
+When you need to map DTOs use the class to map to:
+
+```php
+<?php
+// Assuming this does some aggregate
+// This will map the results of this query to `MyDto`
+$t = $esql(Entity::class, MyDto::class);
+// ...
+$this->dataPaginator->paginate($query, $resourceClass, $operationName, $parameters, [DataPaginator::MAP_TO => MyDto::class]);
+```
 
 The full interface is available as [ESQLInterface](./src/ESQLInterface.php).
 

@@ -51,8 +51,22 @@ WHERE car.id = :id'
 
         $car = $esql(Car::class);
 
-        $this->assertEquals($car->columns(['name'], '|'), 'car.name as car_name');
-        $this->assertEquals($car->columns(['name', 'price'], '|'), 'car.name as car_name|car.price as car_price');
+        $this->assertEquals($car->columns(['name']), 'car.name as car_name');
+        $this->assertEquals($car->columns(['name', 'price']), 'car.name as car_name, car.price as car_price');
+    }
+
+    public function testColumnsOutput(): void
+    {
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $car = $esql(Car::class);
+
+        $this->assertEquals($car->columns(['name'], $car::AS_ARRAY), ['car.name as car_name']);
+        $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY), ['car.name as car_name', 'car.price as car_price']);
+        $this->assertEquals($car->columns(['name', 'price'], $car::AS_STRING | $car::WITHOUT_ALIASES), 'car.name, car.price');
+        $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY | $car::WITHOUT_ALIASES), ['car.name', 'car.price']);
     }
 
     protected function setUp(): void
