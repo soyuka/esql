@@ -106,7 +106,7 @@ class DataPaginator
         }
 
         $firstResult = ($page - 1) * $itemsPerPage;
-        $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters);
+        $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters, $context);
 
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
@@ -135,7 +135,7 @@ SQL;
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
     }
 
-    protected function count(string $query, array $parameters = []): float
+    protected function count(string $query, array $parameters = [], array $context = []): float
     {
         $connection = $this->managerRegistry->getConnection();
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
@@ -144,6 +144,17 @@ SQL;
         $parser = new Parser($query);
         if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
             switch ($driverName) {
+                case 'pdo_sqlsrv':
+                if (!isset($context[self::ORDER_BY])) {
+                    throw new RuntimeException('An ORDER_BY clause is needed to use ROW_NUMBER');
+                }
+
+                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$context[self::ORDER_BY]}) AS RowNumber,", $query, 1);
+                $query = <<<SQL
+$query
+) AS paginated
+SQL;
+                    break;
                 case 'pdo_pgsql':
                     $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
                     break;
