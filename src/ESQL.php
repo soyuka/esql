@@ -13,12 +13,10 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL;
 
-use ReflectionClass;
+use Soyuka\ESQL\Exception\InvalidArgumentException;
 
 abstract class ESQL implements ESQLInterface
 {
-    /** @var ESQLInterface[] */
-    private array $closures = [];
     private static array $aliases = [];
     private static array $countAliases = [];
     private static array $classAliases = [];
@@ -27,7 +25,10 @@ abstract class ESQL implements ESQLInterface
     protected $metadata = null;
     protected string $alias = '';
     protected string $table = '';
-    public string $class = '';
+    /** @var class-string */
+    protected ?string $class = null;
+    /** @var class-string */
+    protected ?string $mapTo = null;
 
     abstract public function table(): string;
 
@@ -59,52 +60,42 @@ abstract class ESQL implements ESQLInterface
      */
     abstract protected function getClassMetadata(string $class);
 
-    public static function getAlias($objectOrClass): string
+    public function __invoke($objectOrClass, ?string $mapTo = null): ESQLInterface
     {
         /** @var class-string */
         $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
-
-        if (isset(self::$aliases[$class])) {
-            return self::$aliases[$class];
-        }
-
-        $alias = strtolower((new ReflectionClass($class))->getShortName());
-        self::$countAliases[$alias] = isset(self::$countAliases[$alias]) ? self::$countAliases[$alias] + 1 : 1;
-        self::$aliases[$class] = 1 === self::$countAliases[$alias] ? $alias : $alias.self::$countAliases[$alias];
-        self::$classAliases[self::$aliases[$class]] = $class;
-
-        return self::$aliases[$class];
-    }
-
-    public static function getClass(string $alias): string
-    {
-        return self::$classAliases[$alias];
-    }
-
-    /**
-     * @param object|string $objectOrClass
-     */
-    public function __invoke($objectOrClass, ?string $aliasTo = null): ESQLInterface
-    {
-        $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
-        $key = $class.($aliasTo ?: '');
-        if (isset($this->closures[$key])) {
-            return $this->closures[$key];
-        }
-
         $that = clone $this;
-        $that->class = $class;
-        $that->alias = ($this->alias ? "{$this->alias}_" : '').($aliasTo ? $that->getAlias($aliasTo) : $that->getAlias($class));
-        $that->metadata = $this->getClassMetadata($class);
 
-        if ($aliasTo) {
-            self::$aliases[$class] = $that->alias;
-            self::$classAliases[$that->alias] = $aliasTo;
+        if ($this->class) {
+            $that->alias = $this->alias.'_'.$this->getRelationAlias($this->mapTo ?? $this->class, $class);
+        } else {
+            /** @var ?class-string $mapTo */
+            $that->alias = strtolower((new \ReflectionClass($mapTo ?? $class))->getShortName());
         }
 
+        $that->class = $class;
+        /** @var class-string */
+        $that->mapTo = $mapTo;
+        $that->metadata = $this->getClassMetadata($class);
         $schema = $that->metadata->getSchemaName() ? $that->metadata->getSchemaName().'.' : '';
         $that->table = "{$schema}{$that->metadata->getTableName()} {$that->alias}";
 
-        return $this->closures[$key] = $that;
+        return $that;
+    }
+
+    /**
+     * @param class-string $class
+     */
+    private function getRelationAlias(string $class, string $relationClass): string
+    {
+        $refl = new \ReflectionClass($class);
+        foreach ($refl->getProperties() as $prop) {
+            $type = $prop->getType();
+            if ($type instanceof \ReflectionNamedType && $type->getName() === $relationClass) {
+                return $prop->getName();
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf('%s has no relation with %s.', $class, $relationClass));
     }
 }

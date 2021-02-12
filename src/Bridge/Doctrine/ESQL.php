@@ -20,6 +20,7 @@ use LogicException;
 use Soyuka\ESQL\ESQL as Base;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
+use Soyuka\ESQL\Exception\InvalidArgumentException;
 use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQL extends Base
@@ -58,17 +59,20 @@ final class ESQL extends Base
             $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
         }
 
-        if ($output & ESQLInterface::WITH_JOIN_COLUMNS) {
-            foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
-                if (!isset($association['joinColumns']) || $association['sourceEntity'] !== $this->class || ($fields && !\in_array($fieldName, $fields, true))) {
-                    continue;
-                }
+        if ($output & ESQLInterface::WITHOUT_JOIN_COLUMNS) {
+            return $output & ESQLInterface::AS_ARRAY ? $columns : implode(', ', $columns);
+        }
 
-                foreach ($association['joinColumns'] as $i => $joinColumn) {
-                    $columnName = "$this->alias.{$joinColumn['name']}";
-                    $aliased = " as {$this->alias}_{$joinColumn['name']}";
-                    $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
-                }
+        foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
+            if (!isset($association['joinColumns']) || $association['sourceEntity'] !== $this->class || ($fields && !\in_array($fieldName, $fields, true))) {
+                continue;
+            }
+
+            $relationAlias = $this->__invoke($association['targetEntity'])->alias();
+            foreach ($association['joinColumns'] as $i => $joinColumn) {
+                $columnName = "$this->alias.{$joinColumn['name']}";
+                $aliased = " as {$relationAlias}_{$joinColumn['referencedColumnName']}";
+                $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
             }
         }
 
@@ -135,8 +139,12 @@ final class ESQL extends Base
 
     public function map(array $data)
     {
-        if (null === $this->mapper) {
+        if (!$this->mapper) {
             throw new LogicException('Mapper not available.');
+        }
+
+        if (!$this->class) {
+            throw new LogicException('No class to map to.');
         }
 
         return $this->mapper->map($data, $this->class);
@@ -155,5 +163,42 @@ final class ESQL extends Base
         }
 
         return $classMetadata;
+    }
+
+    public function __invoke($objectOrClass, ?string $mapTo = null): ESQLInterface
+    {
+        try {
+            return parent::__invoke($objectOrClass, $mapTo);
+        } catch (InvalidArgumentException $e) {
+            /** @var class-string */
+            $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
+            $that = clone $this;
+
+            if ($this->class) {
+                $that->alias = $this->alias.'_'.$this->getRelationAlias($this->class, $class);
+            } else {
+                $that->alias = strtolower((new \ReflectionClass($class))->getShortName());
+            }
+
+            $that->class = $class;
+            $that->metadata = $this->getClassMetadata($class);
+            $schema = $that->metadata->getSchemaName() ? $that->metadata->getSchemaName().'.' : '';
+            $that->table = "{$schema}{$that->metadata->getTableName()} {$that->alias}";
+
+            return $that;
+        }
+    }
+
+    private function getRelationAlias(string $class, string $relationClass): string
+    {
+        $metadata = $this->getClassMetadata($class);
+        $relationMetadata = $this->getClassMetadata($relationClass);
+        foreach ($metadata->getAssociationMappings() as $association) {
+            if ($association['targetEntity'] === $relationMetadata->name) {
+                return $association['fieldName'];
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf('%s has no relation with %s.', $class, $relationClass));
     }
 }

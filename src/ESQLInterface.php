@@ -18,7 +18,7 @@ interface ESQLInterface
     public const AS_STRING = 1;
     public const AS_ARRAY = 2;
     public const WITHOUT_ALIASES = 4;
-    public const WITH_JOIN_COLUMNS = 8;
+    public const WITHOUT_JOIN_COLUMNS = 8;
 
     /**
      * Retrieves the table.
@@ -31,7 +31,7 @@ interface ESQLInterface
     public function alias(): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
      *
      * @param TFlags $output
      *
@@ -55,7 +55,7 @@ interface ESQLInterface
     public function join(string $relationClass): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
      *
      * @param TFlags $output
      *
@@ -90,19 +90,20 @@ interface ESQLInterface
     /**
      * Get closures to ease HEREDOC calls.
      *
-     * @param object|string $objectOrClass
+     * @param object|class-string|string $objectOrClass
+     * @param string|class-string|null   $mapTo
      */
-    public function __invoke($objectOrClass, ?string $aliasTo = null): self;
+    public function __invoke($objectOrClass, ?string $mapTo = null): self;
 
     /**
      * Get the class alias.
      *
      * @param object|string $objectOrClass
      */
-    public static function getAlias($objectOrClass): string;
+    // public static function getAlias($objectOrClass): string;
 
     /**
      * Get the class matching a given alias.
      */
-    public static function getClass(string $alias): string;
+    // public static function getClass(string $alias): string;
 }

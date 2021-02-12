@@ -49,8 +49,10 @@ class Product
      * @ORM\ManyToOne(targetEntity=Category::class)
      * @ORM\JoinColumn(name="category_id", referencedColumnName="identifier")
      * @ApiProperty(readable=false)
+     *
+     * @var Category
      */
-    public Category $categoryRelation;
+    public $categoryRelation; // this property is not typed on purpose
 
     /**
      * @ApiProperty(iri="http://schema.org/category")

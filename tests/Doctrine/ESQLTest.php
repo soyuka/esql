@@ -15,11 +15,61 @@ namespace Soyuka\ESQL\Tests;
 
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+
+final class Aggregate
+{
+    public Model $model;
+}
 
 class ESQLTest extends KernelTestCase
 {
+    public function testEsqlAliases(): void
+    {
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $car = $esql(Car::class);
+        $model = $car(Model::class);
+
+        $this->assertEquals($car->alias(), 'car');
+        $this->assertEquals($model->alias(), 'car_model');
+
+        $product = $esql(Product::class);
+        $category = $product(Category::class);
+
+        $this->assertEquals($product->alias(), 'product');
+        $this->assertEquals($category->alias(), 'product_categoryRelation');
+    }
+
+    public function testEsqlWrongAlias(): void
+    {
+        $this->expectErrorMessage(sprintf('%s has no relation with %s.', Product::class, Model::class));
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $product = $esql(Product::class);
+        $category = $product(Model::class);
+    }
+
+    public function testEsqlCustomAlias(): void
+    {
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $statistics = $esql(Product::class, Aggregate::class);
+        $category = $statistics(Model::class);
+
+        $this->assertEquals($statistics->alias(), 'aggregate');
+        $this->assertEquals($category->alias(), 'aggregate_model');
+    }
+
     public function testEsql(): void
     {
         $container = self::$kernel->getContainer();
@@ -30,19 +80,17 @@ class ESQLTest extends KernelTestCase
         $model = $car(Model::class);
 
         $query = <<<SQL
-        SELECT {$car->columns()}, {$model->columns()}
+        SELECT {$car->columns()}, {$model->columns(['name'])}
         FROM {$car->table()}
         INNER JOIN {$model->table()} ON {$car->join(Model::class)}
         WHERE {$car->identifier()}
         SQL;
 
-        $this->assertSame('SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car_model.id as car_model_id, car_model.name as car_model_name
+        $this->assertSame('SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car.model_id as car_model_id, car_model.name as car_model_name
 FROM Car car
 INNER JOIN Model car_model ON car_model.id = car.model_id
 WHERE car.id = :id', $query
         );
-        $this->assertEquals($esql->getAlias(Car::class), 'car');
-        $this->assertEquals($esql->getAlias(Model::class), 'model');
     }
 
     public function testFilterColumns(): void
@@ -69,8 +117,8 @@ WHERE car.id = :id', $query
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY), ['car.name as car_name', 'car.price as car_price']);
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_STRING | $car::WITHOUT_ALIASES), 'car.name, car.price');
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY | $car::WITHOUT_ALIASES), ['car.name', 'car.price']);
-        $this->assertEquals($car->columns(['name', 'model'], $car::AS_ARRAY | $car::WITH_JOIN_COLUMNS), ['car.name as car_name', 'car.model_id as car_model_id']);
-        $this->assertEquals($car->columns(['name', 'model'], $car::WITHOUT_ALIASES | $car::WITH_JOIN_COLUMNS), 'car.name, car.model_id');
+        $this->assertEquals($car->columns(['name', 'model'], $car::AS_ARRAY), ['car.name as car_name', 'car.model_id as car_model_id']);
+        $this->assertEquals($car->columns(null, $car::WITHOUT_ALIASES | $car::WITHOUT_JOIN_COLUMNS), 'car.id, car.name, car.color, car.price, car.sold');
     }
 
     protected function setUp(): void

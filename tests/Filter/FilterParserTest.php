@@ -16,7 +16,6 @@ namespace Soyuka\ESQL\Tests\Filter;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Filter\FilterParser;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
-use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class FilterParserTest extends KernelTestCase
@@ -35,8 +34,6 @@ class FilterParserTest extends KernelTestCase
 
         $esql = new ESQL($registry);
         $filterParser = new FilterParser($esql, $registry);
-        ESQL::getAlias(Car::class);
-        ESQL::getAlias(Model::class);
 
         $this->assertEquals($filterParser->parse($filter, Car::class), $result);
     }
@@ -86,8 +83,6 @@ class FilterParserTest extends KernelTestCase
 
         $esql = new ESQL($registry);
         $filterParser = new FilterParser($esql, $registry);
-        ESQL::getAlias(Car::class);
-        ESQL::getAlias(Model::class);
 
         $this->assertEquals($filterParser->parse($filter, Car::class), $result);
     }

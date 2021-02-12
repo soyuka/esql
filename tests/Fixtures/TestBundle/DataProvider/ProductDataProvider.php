@@ -49,6 +49,7 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $data = $this->decorated->getCollection($resourceClass, $operationName, $context);
+        dd($data);
         $categories = $this->getCategories();
 
         foreach ($data as $product) {

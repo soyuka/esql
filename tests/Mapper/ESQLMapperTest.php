@@ -31,9 +31,6 @@ class ESQLMapperTest extends KernelTestCase
      */
     public function testMapCar(ESQLMapperInterface $mapper): void
     {
-        ESQL::getAlias(Car::class);
-        ESQL::getAlias(Model::class);
-
         $model = new Model();
         $model->id = 1;
         $model->name = 'Volkswagen';
@@ -59,8 +56,6 @@ class ESQLMapperTest extends KernelTestCase
      */
     public function testMapCategory(ESQLMapperInterface $mapper): void
     {
-        ESQL::getAlias(Category::class);
-
         $vegetables = new Category();
         $vegetables->identifier = 'v';
         $vegetables->parent = null;
