@@ -6,7 +6,7 @@ on:
 
 env:
   COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  SHELL_VERBOSITY: 2
+  SHELL_VERBOSITY: 1
   CODECOV_TOKEN: 74bc8cef-2189-4ac2-9f96-9c910c7c59b0
 
 jobs:
