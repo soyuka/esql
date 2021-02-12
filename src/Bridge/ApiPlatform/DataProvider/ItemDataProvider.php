@@ -18,7 +18,6 @@ use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 
