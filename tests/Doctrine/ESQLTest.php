@@ -27,17 +27,19 @@ class ESQLTest extends KernelTestCase
         $esql = new ESQL($registry);
 
         $car = $esql(Car::class);
-        $model = $esql(Model::class);
+        $model = $car(Model::class);
 
         $query = <<<SQL
-        SELECT {$car->columns()}, {$model->columns()} FROM {$car->table()}
+        SELECT {$car->columns()}, {$model->columns()}
+        FROM {$car->table()}
         INNER JOIN {$model->table()} ON {$car->join(Model::class)}
         WHERE {$car->identifier()}
         SQL;
 
-        $this->assertSame($query, 'SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car.model_id as car_model_id, model.id as model_id, model.name as model_name FROM Car car
-INNER JOIN Model model ON model.id = car.model_id
-WHERE car.id = :id'
+        $this->assertSame('SELECT car.id as car_id, car.name as car_name, car.color as car_color, car.price as car_price, car.sold as car_sold, car_model.id as car_model_id, car_model.name as car_model_name
+FROM Car car
+INNER JOIN Model car_model ON car_model.id = car.model_id
+WHERE car.id = :id', $query
         );
         $this->assertEquals($esql->getAlias(Car::class), 'car');
         $this->assertEquals($esql->getAlias(Model::class), 'model');
@@ -67,6 +69,8 @@ WHERE car.id = :id'
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY), ['car.name as car_name', 'car.price as car_price']);
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_STRING | $car::WITHOUT_ALIASES), 'car.name, car.price');
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY | $car::WITHOUT_ALIASES), ['car.name', 'car.price']);
+        $this->assertEquals($car->columns(['name', 'model'], $car::AS_ARRAY | $car::WITH_JOIN_COLUMNS), ['car.name as car_name', 'car.model_id as car_model_id']);
+        $this->assertEquals($car->columns(['name', 'model'], $car::WITHOUT_ALIASES | $car::WITH_JOIN_COLUMNS), 'car.name, car.model_id');
     }
 
     protected function setUp(): void

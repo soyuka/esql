@@ -33,7 +33,7 @@ abstract class ESQL implements ESQLInterface
 
     abstract public function alias(): string;
 
-    abstract public function columns(?array $fields = null, int $output = self::AS_STRING);
+    abstract public function columns(?array $fields = null, int $output = ESQLInterface::AS_STRING);
 
     abstract public function column(string $fieldName): ?string;
 
@@ -41,7 +41,7 @@ abstract class ESQL implements ESQLInterface
 
     abstract public function join(string $relationClass): string;
 
-    abstract public function predicates(?array $fields = null, string $glue = ', '): string;
+    abstract public function predicates(?array $fields = null, int $output = ESQLInterface::AS_STRING);
 
     abstract public function toSQLValue(string $fieldName, $value);
 
@@ -94,7 +94,7 @@ abstract class ESQL implements ESQLInterface
 
         $that = clone $this;
         $that->class = $class;
-        $that->alias = $aliasTo ? $that->getAlias($aliasTo) : $that->getAlias($class);
+        $that->alias = ($this->alias ? "{$this->alias}_" : '').($aliasTo ? $that->getAlias($aliasTo) : $that->getAlias($class));
         $that->metadata = $this->getClassMetadata($class);
 
         if ($aliasTo) {

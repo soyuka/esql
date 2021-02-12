@@ -18,6 +18,7 @@ interface ESQLInterface
     public const AS_STRING = 1;
     public const AS_ARRAY = 2;
     public const WITHOUT_ALIASES = 4;
+    public const WITH_JOIN_COLUMNS = 8;
 
     /**
      * Retrieves the table.
@@ -30,9 +31,11 @@ interface ESQLInterface
     public function alias(): string;
 
     /**
-     * Retrieves columns for a given resource.
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES>
      *
-     * @return string|string[]
+     * @param TFlags $output
+     *
+     * @return ($output is ESQLInterface::AS_STRING ? string : array)
      */
     public function columns(?array $fields = null, int $output = self::AS_STRING);
 
@@ -52,10 +55,13 @@ interface ESQLInterface
     public function join(string $relationClass): string;
 
     /**
-     * Retrieves identifiers predicate, for example foo = :foo.
-     * When no fields are provided it will output every columns.
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES>
+     *
+     * @param TFlags $output
+     *
+     * @return ($output is ESQLInterface::AS_STRING ? string : array)
      */
-    public function predicates(?array $fields = null, string $glue = ', '): string;
+    public function predicates(?array $fields = null, int $output = self::AS_STRING);
 
     /**
      * Normalize this sql value according to the field type.

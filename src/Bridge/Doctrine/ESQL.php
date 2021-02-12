@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use LogicException;
 use Soyuka\ESQL\ESQL as Base;
+use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\RuntimeException;
 
@@ -42,35 +43,36 @@ final class ESQL extends Base
         return $this->alias;
     }
 
-    public function columns(?array $fields = null, int $output = self::AS_STRING)
+    public function columns(?array $fields = null, int $output = ESQLInterface::AS_STRING)
     {
-        $alias = $this->getAlias($this->class);
         $columns = [];
-        $onlyColumnNames = $output & self::WITHOUT_ALIASES;
+        $onlyColumnNames = $output & ESQLInterface::WITHOUT_ALIASES;
 
         foreach ($this->metadata->fieldMappings as $fieldName => $fieldMapping) {
             if ($fields && !\in_array($fieldName, $fields, true)) {
                 continue;
             }
 
-            $columnName = "$alias.{$fieldMapping['columnName']}";
-            $aliased = " as {$alias}_{$fieldName}";
+            $columnName = "{$this->alias}.{$fieldMapping['columnName']}";
+            $aliased = " as {$this->alias}_{$fieldName}";
             $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
         }
 
-        foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
-            if (!isset($association['joinColumns']) || $association['sourceEntity'] !== $this->class || ($fields && !\in_array($fieldName, $fields, true))) {
-                continue;
-            }
+        if ($output & ESQLInterface::WITH_JOIN_COLUMNS) {
+            foreach ($this->metadata->getAssociationMappings() as $fieldName => $association) {
+                if (!isset($association['joinColumns']) || $association['sourceEntity'] !== $this->class || ($fields && !\in_array($fieldName, $fields, true))) {
+                    continue;
+                }
 
-            foreach ($association['joinColumns'] as $i => $joinColumn) {
-                $columnName = "$alias.{$joinColumn['name']}";
-                $aliased = " as {$alias}_{$joinColumn['name']}";
-                $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
+                foreach ($association['joinColumns'] as $i => $joinColumn) {
+                    $columnName = "$this->alias.{$joinColumn['name']}";
+                    $aliased = " as {$this->alias}_{$joinColumn['name']}";
+                    $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
+                }
             }
         }
 
-        return $output & self::AS_ARRAY ? $columns : implode(', ', $columns);
+        return $output & ESQLInterface::AS_ARRAY ? $columns : implode(', ', $columns);
     }
 
     public function column(string $fieldName): ?string
@@ -80,27 +82,25 @@ final class ESQL extends Base
             return null;
         }
 
-        return "{$this->getAlias($this->class)}.{$fieldMapping['columnName']}";
+        return "{$this->alias}.{$fieldMapping['columnName']}";
     }
 
     public function identifier(): string
     {
-        return $this->predicates($this->metadata->getIdentifierFieldNames(), ' AND ');
+        return implode(' AND ', $this->predicates($this->metadata->getIdentifierFieldNames(), ESQLInterface::AS_ARRAY));
     }
 
     public function join(string $relationClass): string
     {
-        $alias = $this->getAlias($this->class);
         $relationMetadata = $this->getClassMetadata($relationClass);
-        $relationAlias = $this->getAlias($relationClass);
-
         foreach ($this->metadata->getAssociationMappings() as $association) {
             if ($association['targetEntity'] === $relationMetadata->name) {
                 $str = '';
+                $relationAlias = $this->__invoke($relationClass)->alias();
                 foreach ($association['joinColumns'] as $i => $joinColumn) {
                     $str .= 0 === $i ? '' : ' AND ';
                     $str .= "{$relationAlias}.{$joinColumn['referencedColumnName']}";
-                    $str .= " = {$alias}.{$joinColumn['name']}";
+                    $str .= " = {$this->alias}.{$joinColumn['name']}";
                 }
 
                 return $str;
@@ -110,17 +110,15 @@ final class ESQL extends Base
         throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $this->metadata->name, $relationMetadata->name));
     }
 
-    public function predicates(?array $fields = null, string $glue = ', '): string
+    public function predicates(?array $fields = null, int $output = ESQLInterface::AS_STRING)
     {
-        $alias = $this->getAlias($this->class);
         $fields = $fields ? array_intersect_key($this->metadata->fieldMappings, array_flip($fields)) : $this->metadata->fieldMappings;
-        $str = '';
+        $result = [];
         foreach ($fields as $fieldName => $field) {
-            $str .= $str ? $glue : '';
-            $str .= "{$alias}.{$field['columnName']} = :{$fieldName}";
+            $result[] = "{$this->alias}.{$field['columnName']} = :{$fieldName}";
         }
 
-        return $str;
+        return $output & ESQLInterface::AS_ARRAY ? $result : implode(', ', $result);
     }
 
     public function toSQLValue(string $fieldName, $value)

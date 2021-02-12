@@ -49,8 +49,8 @@ class ESQLMapperTest extends KernelTestCase
         $car2->model = $model;
 
         $this->assertEquals([$car, $car2], $mapper->map([
-            ['car_id' => '1', 'car_name' => 'Caddy', 'model_id' => '1', 'model_name' => 'Volkswagen'],
-            ['car_id' => '2', 'car_name' => 'Passat', 'model_id' => '1', 'model_name' => 'Volkswagen'],
+            ['car_id' => '1', 'car_name' => 'Caddy', 'car_model_id' => '1', 'car_model_name' => 'Volkswagen'],
+            ['car_id' => '2', 'car_name' => 'Passat', 'car_model_id' => '1', 'car_model_name' => 'Volkswagen'],
         ], Car::class));
     }
 
@@ -69,7 +69,7 @@ class ESQLMapperTest extends KernelTestCase
         $category->name = 'Salads';
         $category->parent = $vegetables;
 
-        $this->assertEquals($category, $mapper->map(['category_identifier' => 'salads', 'category_name' => 'Salads', 'category_parent_id' => 'v'], Category::class));
+        $this->assertEquals($category, $mapper->map(['category_identifier' => 'salads', 'category_name' => 'Salads', 'category_parent_identifier' => 'v'], Category::class));
     }
 
     public function getMapper(): array
@@ -82,7 +82,7 @@ class ESQLMapperTest extends KernelTestCase
         $esql = new ESQL($registry);
 
         return [
-            [new ESQLMapper($autoMapper, $registry)],
+            [new ESQLMapper($autoMapper)],
             // [new ESQLSerializerMapper($normalizer, $esql, $registry)],
         ];
     }

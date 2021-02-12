@@ -13,117 +13,29 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\Automapper;
 
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
-use Soyuka\ESQL\ESQL;
+use Soyuka\ESQL\ESQLMapper as Base;
 use Soyuka\ESQL\ESQLMapperInterface;
-use Soyuka\ESQL\Exception\RuntimeException;
 
-final class ESQLMapper implements ESQLMapperInterface
+final class ESQLMapper extends Base implements ESQLMapperInterface
 {
     private AutoMapperInterface $automapper;
-    private ManagerRegistry $registry;
 
-    public function __construct(AutoMapperInterface $automapper, ManagerRegistry $registry)
+    public function __construct(AutoMapperInterface $automapper)
     {
         $this->automapper = $automapper;
-        $this->registry = $registry;
     }
 
-    public function map(array $data, string $resourceClass)
+    public function map(array $data, string $class)
     {
-        $memory = [];
-        foreach ($data as $key => $value) {
-            if (\is_int($key)) {
-                $data[$key] = $this->map($value, $resourceClass);
-                continue;
-            }
-
-            $aliasPos = strpos($key, '_');
-            if (false === $aliasPos) {
-                continue;
-            }
-
-            $alias = substr($key, 0, $aliasPos);
-            $key = substr($key, $aliasPos + 1);
-            $class = ESQL::getClass($alias);
-
-            if (!isset($memory[$class])) {
-                $memory[$class] = [];
-            }
-
-            if ($value && $association = $this->getAssociation($class, $key)) {
-                $memory[$class][$association['fieldName']] = [$association['sourceToTargetKeyColumns'][$key] => $value];
-            } else {
-                $memory[$class][$key] = $value;
-            }
+        if (!\is_int(key($data))) {
+            return $this->automapper->map($this->toArray($data), $class);
         }
 
-        if (isset($memory[$resourceClass])) {
-            $normalized = $memory[$resourceClass];
-            unset($memory[$resourceClass]);
-            foreach ($memory as $class => $value) {
-                if (!$relationFieldName = $this->relationFieldName($resourceClass, $class)) {
-                    continue;
-                }
-
-                $normalized[$relationFieldName] = $value;
-                unset($memory[$class]);
-            }
-
-            return $this->automapper->map($normalized, $resourceClass);
+        foreach ($data as $key => $value) {
+            $data[$key] = $this->automapper->map($this->toArray($value), $class);
         }
 
         return $data;
-    }
-
-    private function getClassMetadata(string $class): ?ClassMetadataInfo
-    {
-        $manager = $this->registry->getManagerForClass($class);
-        if (!$manager) {
-            return null;
-        }
-
-        $classMetadata = $manager->getClassMetadata($class);
-        if (!$classMetadata instanceof ClassMetadataInfo) {
-            return null;
-        }
-
-        return $classMetadata;
-    }
-
-    private function relationFieldName(string $class, string $relationClass): ?string
-    {
-        $metadata = $this->getClassMetadata($class);
-        $relationMetadata = $this->getClassMetadata($relationClass);
-        if (!$metadata || !$relationMetadata) {
-            return null;
-        }
-
-        foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
-            if ($association['targetEntity'] === $relationClass) {
-                return $fieldName;
-            }
-        }
-
-        throw new RuntimeException(sprintf('Relation between %s and %s was not found.', $metadata->name, $relationMetadata->name));
-    }
-
-    private function getAssociation(string $class, string $columnName): ?array
-    {
-        $metadata = $this->getClassMetadata($class);
-        if (!$metadata) {
-            return null;
-        }
-        foreach ($metadata->getAssociationMappings() as $fieldName => $association) {
-            foreach ($association['joinColumns'] ?? [] as $column) {
-                if ($column['name'] === $columnName) {
-                    return $association;
-                }
-            }
-        }
-
-        return null;
     }
 }
