@@ -20,18 +20,19 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\ESQLMapperInterface;
 
 final class ItemDataProvider implements RestrictedDataProviderInterface, DenormalizedIdentifiersAwareItemDataProviderInterface
 {
     private ManagerRegistry $managerRegistry;
-    private AutoMapperInterface $automapper;
+    private ESQLMapperInterface $mapper;
     private ESQLInterface $esql;
     private ResourceMetadataFactoryInterface $resourceMetadataFactory;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql, ResourceMetadataFactoryInterface $resourceMetadataFactory)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, ResourceMetadataFactoryInterface $resourceMetadataFactory)
     {
         $this->managerRegistry = $managerRegistry;
-        $this->automapper = $automapper;
+        $this->mapper = $mapper;
         $this->esql = $esql;
         $this->resourceMetadataFactory = $resourceMetadataFactory;
     }
@@ -49,7 +50,7 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
         $esql = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT * FROM {$esql->table()} WHERE {$esql->identifier()}
+        SELECT {$esql->columns(null)} FROM {$esql->table()} WHERE {$esql->identifier()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($id);
@@ -60,6 +61,6 @@ SQL;
         }
 
         /** @var object */
-        return $this->automapper->map($data, $resourceClass);
+        return $this->mapper->map($data, $resourceClass);
     }
 }

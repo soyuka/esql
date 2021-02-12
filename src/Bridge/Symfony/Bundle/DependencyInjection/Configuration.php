@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Soyuka\ESQL\Bridge\Symfony\Bundle\DependencyInjection;
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
-use Jane\AutoMapper\AutoMapper;
+use Jane\Component\AutoMapper\AutoMapper;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Symfony\Serializer\ESQLMapper as SerializerESQLMapper;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;

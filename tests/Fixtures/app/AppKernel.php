@@ -68,6 +68,9 @@ class AppKernel extends Kernel
             case 'postgres':
                 $loader->load(__DIR__.'/config/config_postgres.yml');
                 break;
+            case 'sqlsrv':
+                $loader->load(__DIR__.'/config/config_sqlsrv.yml');
+                break;
             default:
                 $loader->load(__DIR__.'/config/config_sqlite.yml');
                 break;

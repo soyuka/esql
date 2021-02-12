@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\Automapper;
 
-use Jane\AutoMapper\AutoMapperInterface;
+use Jane\Component\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\ESQLMapper as Base;
 use Soyuka\ESQL\ESQLMapperInterface;
 

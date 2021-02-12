@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Mapper\Tests;
 
-use Jane\AutoMapper\AutoMapperInterface;
+use Jane\Component\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Bridge\Symfony\Serializer\ESQLMapper as ESQLSerializerMapper;

@@ -22,7 +22,7 @@ abstract class ESQLMapper implements ESQLMapperInterface
     {
         foreach ($data as $key => $value) {
             $aliasPos = strpos($key, '_');
-            if (!$aliasPos) {
+            if (false === $aliasPos) {
                 continue;
             }
 

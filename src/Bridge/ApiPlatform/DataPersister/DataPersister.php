@@ -16,22 +16,22 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\DataPersister;
 use ApiPlatform\Core\DataPersister\ContextAwareDataPersisterInterface;
 use ApiPlatform\Core\DataPersister\DataPersisterInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Jane\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Doctrine\ClassInfoTrait;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\ESQLMapperInterface;
 
 final class DataPersister implements DataPersisterInterface, ContextAwareDataPersisterInterface
 {
     use ClassInfoTrait;
 
     private ManagerRegistry $managerRegistry;
-    private AutoMapperInterface $automapper;
+    private ESQLMapperInterface $mapper;
     private ESQLInterface $esql;
 
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $automapper, ESQLInterface $esql)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql)
     {
         $this->managerRegistry = $managerRegistry;
-        $this->automapper = $automapper;
+        $this->mapper = $mapper;
         $this->esql = $esql;
     }
 
@@ -43,7 +43,7 @@ final class DataPersister implements DataPersisterInterface, ContextAwareDataPer
         $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
         /** @var array */
-        $binding = $this->automapper->map($data, 'array');
+        $binding = $this->mapper->map($data, 'array');
 
         if ($context['previous_data'] ?? null) {
             $query = <<<SQL
@@ -69,7 +69,7 @@ SQL;
         $data = $stmt->fetch();
 
         /** @var object */
-        return $this->automapper->map($data, $this->getObjectClass($data));
+        return $this->mapper->map($data, $this->getObjectClass($data));
     }
 
     /**
