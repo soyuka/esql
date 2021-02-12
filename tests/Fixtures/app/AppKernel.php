@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Jane\AutoMapper\Bundle\JaneAutoMapperBundle;
 use Soyuka\ESQL\Bridge\Symfony\Bundle\ESQLBundle;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\TestBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -21,6 +20,10 @@ use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
+use Hautelook\AliceBundle\HautelookAliceBundle;
+use Fidry\AliceDataFixtures\Bridge\Symfony\FidryAliceDataFixturesBundle;
+use Nelmio\Alice\Bridge\Symfony\NelmioAliceBundle;
+use Jane\Bundle\AutoMapperBundle\JaneAutoMapperBundle;
 
 class AppKernel extends Kernel
 {
@@ -33,9 +36,9 @@ class AppKernel extends Kernel
             new DoctrineBundle(),
             new ApiPlatformBundle(),
             new ESQLBundle(),
-            new Nelmio\Alice\Bridge\Symfony\NelmioAliceBundle(),
-            new Fidry\AliceDataFixtures\Bridge\Symfony\FidryAliceDataFixturesBundle(),
-            new Hautelook\AliceBundle\HautelookAliceBundle(),
+            new NelmioAliceBundle(),
+            new FidryAliceDataFixturesBundle(),
+            new HautelookAliceBundle(),
             new JaneAutoMapperBundle(),
             new TestBundle(),
         ];
