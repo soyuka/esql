@@ -130,7 +130,7 @@ SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($parameters);
         $data = $stmt->fetchAll();
-        $data = $this->mapper->map($data, $context[self::MAP_TO] ?? $resourceClass);
+        $data = !$data ? $data : $this->mapper->map($data, $context[self::MAP_TO] ?? $resourceClass);
 
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
     }

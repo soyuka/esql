@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL;
 
-
 abstract class ESQLMapper implements ESQLMapperInterface
 {
     abstract public function map(array $data, string $class);
@@ -40,7 +39,7 @@ abstract class ESQLMapper implements ESQLMapperInterface
                 $memory[$nextAlias] = [];
             }
 
-            $memory[$nextAlias] = $this->toArray([$key => $value], $memory[$nextAlias]);
+            $memory[$nextAlias] = !$value ? $value : $this->toArray([$key => $value], $memory[$nextAlias]);
         }
 
         return $memory;

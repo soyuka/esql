@@ -15,6 +15,7 @@ namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider;
 
 use ApiPlatform\Core\DataProvider\CollectionDataProviderInterface;
 use ApiPlatform\Core\DataProvider\ContextAwareCollectionDataProviderInterface;
+use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\ESQLInterface;
@@ -49,7 +50,10 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
         $data = $this->decorated->getCollection($resourceClass, $operationName, $context);
-        dd($data);
+        if ($data instanceof PartialPaginatorInterface && !\count($data)) {
+            return $data;
+        }
+
         $categories = $this->getCategories();
 
         foreach ($data as $product) {

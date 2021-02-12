@@ -48,7 +48,7 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
         }
 
         $product = $this->esql->__invoke($resourceClass);
-        $category = $this->esql->__invoke(Category::class);
+        $category = $product(Category::class);
 
         $query = <<<SQL
 WITH RECURSIVE
