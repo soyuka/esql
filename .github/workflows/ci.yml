@@ -6,7 +6,7 @@ on:
 
 env:
   COMPOSER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  SHELL_VERBOSITY: 2
+  SHELL_VERBOSITY: 1
   CODECOV_TOKEN: 74bc8cef-2189-4ac2-9f96-9c910c7c59b0
 
 jobs:
@@ -149,6 +149,61 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: pecl, composer
           extensions: intl, bcmath, curl, openssl, mbstring, pdo_pgsql
+          coverage: pcov
+          ini-values: memory_limit=-1
+      - name: Get composer cache directory
+        id: composercache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composercache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Update project dependencies
+        run: composer update --no-interaction --no-progress --ansi
+      - name: Install PHPUnit
+        run: vendor/bin/simple-phpunit --version
+      - name: Clear test app cache
+        run: tests/Fixtures/app/console cache:clear --ansi
+      - run: tests/Fixtures/app/console doctrine:schema:create -v
+      - name: Run PHPUnit tests
+        run: vendor/bin/simple-phpunit --coverage-clover coverage.xml
+
+  sqlserver:
+    name: PHPUnit (PHP ${{ matrix.php }}) (SQLServer)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        php:
+          - '7.4'
+      fail-fast: false
+    env:
+      ESQL_DB: sqlsrv
+      DATABASE_URL: mssql://sa:ApiPlatformRocks2020!@localhost/api_platform_test
+    services:
+      sqlsrv:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: ApiPlatformRocks2020!
+        ports:
+          - 1433:1433
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup sqlserver
+        run: |
+          sleep 7
+          echo $(docker ps | tail -n 1 | awk '{print $1}')
+          docker exec $(docker ps | tail -n 1 | awk '{print $1}') /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ApiPlatformRocks2020! -d master -Q "CREATE DATABASE api_platform_test;"
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: pecl, composer
+          extensions: intl, bcmath, curl, openssl, mbstring, pdo_sqlsrv
           coverage: pcov
           ini-values: memory_limit=-1
       - name: Get composer cache directory

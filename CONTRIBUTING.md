@@ -10,3 +10,24 @@ tests/Fixtures/app/console doctrine:schema:create
 ```
 
 ESQL_DB environment variable helps to specify what database to test on, possible values are: `postgres`. Defaults to an empty string for `sqlite`.
+
+## Live
+
+Start the development server with the [symfony binary](https://symfony.com/download):
+
+```
+symfony --dir tests/Fixtures/app/ server:start
+```
+
+Note I often use `VAR_DUMPER_FORMAT=cli`
+
+## Postgres
+
+Run a container with postgres (and the postgis extension, why not):
+
+```
+docker run -p '5432:5432' --name postgres-esql -e POSTGRES_DB=esql_test -e POSTGRES_PASSWORD=password -e POSTGRES_USER=esql postgis/postgis:12-3.0-alpine
+ESQL_DB=postgres tests/Fixtures/app/console cache:clear
+ESQL_DB=postgres d:s:c # doctrine:schema:create
+ESQL_DB=postgres vendor/bin/phpunit --stop-on-failure
+```

@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\ApiPlatformBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use Jane\AutoMapper\Bundle\JaneAutoMapperBundle;
+use Fidry\AliceDataFixtures\Bridge\Symfony\FidryAliceDataFixturesBundle;
+use Hautelook\AliceBundle\HautelookAliceBundle;
+use Jane\Bundle\AutoMapperBundle\JaneAutoMapperBundle;
+use Nelmio\Alice\Bridge\Symfony\NelmioAliceBundle;
 use Soyuka\ESQL\Bridge\Symfony\Bundle\ESQLBundle;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\TestBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -33,9 +36,9 @@ class AppKernel extends Kernel
             new DoctrineBundle(),
             new ApiPlatformBundle(),
             new ESQLBundle(),
-            new Nelmio\Alice\Bridge\Symfony\NelmioAliceBundle(),
-            new Fidry\AliceDataFixtures\Bridge\Symfony\FidryAliceDataFixturesBundle(),
-            new Hautelook\AliceBundle\HautelookAliceBundle(),
+            new NelmioAliceBundle(),
+            new FidryAliceDataFixturesBundle(),
+            new HautelookAliceBundle(),
             new JaneAutoMapperBundle(),
             new TestBundle(),
         ];
@@ -64,6 +67,9 @@ class AppKernel extends Kernel
         switch ($_SERVER['ESQL_DB'] ?? null) {
             case 'postgres':
                 $loader->load(__DIR__.'/config/config_postgres.yml');
+                break;
+            case 'sqlsrv':
+                $loader->load(__DIR__.'/config/config_sqlsrv.yml');
                 break;
             default:
                 $loader->load(__DIR__.'/config/config_sqlite.yml');

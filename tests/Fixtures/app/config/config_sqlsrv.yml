@@ -1,0 +1,13 @@
+imports:
+    - { resource: config.yml }
+
+doctrine:
+    dbal:
+        driver: pdo_sqlsrv
+        url: '%env(resolve:DATABASE_URL)%'
+        path: ~
+
+    orm:
+        auto_generate_proxy_classes:   '%kernel.debug%'
+        auto_mapping:                  true
+

@@ -41,9 +41,8 @@ class ESQLTest extends KernelTestCase
 
         $product = $esql(Product::class);
         $category = $product(Category::class);
-
         $this->assertEquals($product->alias(), 'product');
-        $this->assertEquals($category->alias(), 'product_categoryRelation');
+        $this->assertEquals($category->alias(), 'product_categoryrelation');
     }
 
     public function testEsqlWrongAlias(): void

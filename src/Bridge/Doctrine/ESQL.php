@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use LogicException;
 use Soyuka\ESQL\ESQL as Base;
+use Soyuka\ESQL\ESQLAlias;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\InvalidArgumentException;
@@ -41,7 +42,7 @@ final class ESQL extends Base
 
     public function alias(): string
     {
-        return $this->alias;
+        return (string) $this->alias;
     }
 
     public function columns(?array $fields = null, int $output = ESQLInterface::AS_STRING)
@@ -68,10 +69,10 @@ final class ESQL extends Base
                 continue;
             }
 
-            $relationAlias = $this->__invoke($association['targetEntity'])->alias();
+            $relationAlias = $this->__invoke($association['targetEntity']);
             foreach ($association['joinColumns'] as $i => $joinColumn) {
                 $columnName = "$this->alias.{$joinColumn['name']}";
-                $aliased = " as {$relationAlias}_{$joinColumn['referencedColumnName']}";
+                $aliased = " as {$relationAlias->alias()}_{$joinColumn['referencedColumnName']}";
                 $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
             }
         }
@@ -100,10 +101,10 @@ final class ESQL extends Base
         foreach ($this->metadata->getAssociationMappings() as $association) {
             if ($association['targetEntity'] === $relationMetadata->name) {
                 $str = '';
-                $relationAlias = $this->__invoke($relationClass)->alias();
+                $relationAlias = $this->__invoke($relationClass);
                 foreach ($association['joinColumns'] as $i => $joinColumn) {
                     $str .= 0 === $i ? '' : ' AND ';
-                    $str .= "{$relationAlias}.{$joinColumn['referencedColumnName']}";
+                    $str .= "{$relationAlias->alias()}.{$joinColumn['referencedColumnName']}";
                     $str .= " = {$this->alias}.{$joinColumn['name']}";
                 }
 
@@ -147,7 +148,11 @@ final class ESQL extends Base
             throw new LogicException('No class to map to.');
         }
 
-        return $this->mapper->map($data, $this->class);
+        if (!$this->alias) {
+            throw new LogicException('No alias to map from.');
+        }
+
+        return $this->mapper->map($data, $this->class, $this->alias);
     }
 
     protected function getClassMetadata(string $class)
@@ -174,13 +179,18 @@ final class ESQL extends Base
             $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
             $that = clone $this;
 
-            if ($this->class) {
-                $that->alias = $this->alias.'_'.$this->getRelationAlias($this->class, $class);
+            if ($this->class && $this->alias) {
+                $relationAlias = new ESQLAlias($this->getRelationAlias($this->mapTo ?? $this->class, $class), $this->alias);
+                $this->alias->add($relationAlias);
+                $that->alias = $relationAlias;
             } else {
-                $that->alias = strtolower((new \ReflectionClass($class))->getShortName());
+                /** @var ?class-string $mapTo */
+                $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
             }
 
             $that->class = $class;
+            /** @var class-string */
+            $that->mapTo = $mapTo;
             $that->metadata = $this->getClassMetadata($class);
             $schema = $that->metadata->getSchemaName() ? $that->metadata->getSchemaName().'.' : '';
             $that->table = "{$schema}{$that->metadata->getTableName()} {$that->alias}";

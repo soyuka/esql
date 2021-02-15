@@ -22,22 +22,19 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Soyuka\ESQL\ESQLInterface;
-use Soyuka\ESQL\ESQLMapperInterface;
 
 final class CollectionDataProvider implements RestrictedDataProviderInterface, CollectionDataProviderInterface, ContextAwareCollectionDataProviderInterface
 {
     private ManagerRegistry $managerRegistry;
-    private ESQLMapperInterface $mapper;
     private ESQLInterface $esql;
     private DataPaginator $dataPaginator;
     private ResourceMetadataFactoryInterface $resourceMetadataFactory;
     private iterable $collectionExtensions;
     private LoggerInterface $logger;
 
-    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, DataPaginator $dataPaginator, ResourceMetadataFactoryInterface $resourceMetadataFactory, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLInterface $esql, DataPaginator $dataPaginator, ResourceMetadataFactoryInterface $resourceMetadataFactory, iterable $collectionExtensions = [], ?LoggerInterface $logger = null)
     {
         $this->managerRegistry = $managerRegistry;
-        $this->mapper = $mapper;
         $this->esql = $esql;
         $this->dataPaginator = $dataPaginator;
         $this->collectionExtensions = $collectionExtensions;
@@ -69,6 +66,8 @@ SQL;
         }
 
         if ($this->dataPaginator->shouldPaginate($resourceClass, $operationName)) {
+            $context[DataPaginator::ESQL] = $esql;
+
             return $this->dataPaginator->paginate($query, $resourceClass, $operationName, $parameters, $context);
         }
 
@@ -76,6 +75,6 @@ SQL;
         $stmt->execute($parameters);
         $data = $stmt->fetchAll();
 
-        return $this->mapper->map($data, $resourceClass);
+        return $esql->map($data);
     }
 }

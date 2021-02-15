@@ -18,5 +18,5 @@ interface ESQLMapperInterface
     /**
      * @return mixed
      */
-    public function map(array $data, string $class);
+    public function map(array $data, string $class, ESQLAlias $a);
 }

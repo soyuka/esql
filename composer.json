@@ -20,9 +20,10 @@
         "phpspec/prophecy-phpunit": "^2.0",
         "api-platform/core": "^2.6.2",
         "doctrine/orm": "^2.8",
-        "jane-php/automapper": "^6.3",
+        "jane-php/automapper": "dev-next",
         "symfony/serializer": "^5.2",
-        "symfony/uid": "^5.2"
+        "symfony/uid": "^5.2",
+        "jane-php/automapper-bundle": "dev-next"
     },
     "suggest": {
         "doctrine/orm": "To use doctrine metadata.",
