@@ -79,9 +79,10 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
         $connection = $this->managerRegistry->getConnection();
         $categoryPredicate = $categoryParameter ? 'c.identifier = :category' : 'c.parent_id IS NULL';
         $category = $this->esql->__invoke(Category::class);
+        $recursive = 'pdo_sqlsrv' === $connection->getDriver()->getName() ? '' : ' RECURSIVE ';
 
         $query = <<<SQL
-WITH
+WITH{$recursive}
     ancestors(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE {$categoryPredicate}
         UNION ALL

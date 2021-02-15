@@ -120,6 +120,7 @@ class DataPaginator
             case 'pdo_sqlsrv':
                 Context::setMode('NO_ENCLOSING_QUOTES');
                 $parser = new Parser($query);
+                /** @var string */
                 $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
 
                 if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
