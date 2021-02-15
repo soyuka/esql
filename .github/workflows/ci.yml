@@ -203,7 +203,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           tools: pecl, composer
-          extensions: intl, bcmath, curl, openssl, mbstring, pdo_pgsql
+          extensions: intl, bcmath, curl, openssl, mbstring, pdo_sqlsrv
           coverage: pcov
           ini-values: memory_limit=-1
       - name: Get composer cache directory
