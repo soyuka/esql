@@ -181,7 +181,7 @@ jobs:
       fail-fast: false
     env:
       ESQL_DB: sqlsrv
-      DATABASE_URL: sqlsrv://sa:ApiPlatformRocks2020!@localhost/api_platform_test
+      DATABASE_URL: mssql://sa:ApiPlatformRocks2020!@localhost/api_platform_test
     services:
       sqlsrv:
         image: mcr.microsoft.com/mssql/server:2019-latest

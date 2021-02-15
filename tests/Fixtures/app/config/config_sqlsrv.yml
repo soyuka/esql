@@ -3,9 +3,8 @@ imports:
 
 doctrine:
     dbal:
-        driver:                       'pdo_sqlsrv'
         path: ~
-        charset:                      'UTF8'
+        dbname: master
 
     orm:
         auto_generate_proxy_classes:   '%kernel.debug%'
