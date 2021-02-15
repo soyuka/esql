@@ -19,19 +19,16 @@ use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\ESQLInterface;
-use Soyuka\ESQL\ESQLMapperInterface;
 
 final class ItemDataProvider implements RestrictedDataProviderInterface, DenormalizedIdentifiersAwareItemDataProviderInterface
 {
     private ManagerRegistry $managerRegistry;
-    private ESQLMapperInterface $mapper;
     private ESQLInterface $esql;
     private ResourceMetadataFactoryInterface $resourceMetadataFactory;
 
-    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, ResourceMetadataFactoryInterface $resourceMetadataFactory)
+    public function __construct(ManagerRegistry $managerRegistry, ESQLInterface $esql, ResourceMetadataFactoryInterface $resourceMetadataFactory)
     {
         $this->managerRegistry = $managerRegistry;
-        $this->mapper = $mapper;
         $this->esql = $esql;
         $this->resourceMetadataFactory = $resourceMetadataFactory;
     }
@@ -49,7 +46,7 @@ final class ItemDataProvider implements RestrictedDataProviderInterface, Denorma
         $esql = $this->esql->__invoke($resourceClass);
 
         $query = <<<SQL
-        SELECT {$esql->columns(null)} FROM {$esql->table()} WHERE {$esql->identifier()}
+        SELECT {$esql->columns()} FROM {$esql->table()} WHERE {$esql->identifier()}
 SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($id);
@@ -60,6 +57,6 @@ SQL;
         }
 
         /** @var object */
-        return $this->mapper->map($data, $resourceClass);
+        return $esql->map($data);
     }
 }

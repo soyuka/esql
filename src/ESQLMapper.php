@@ -15,31 +15,24 @@ namespace Soyuka\ESQL;
 
 abstract class ESQLMapper implements ESQLMapperInterface
 {
-    abstract public function map(array $data, string $class);
+    abstract public function map(array $data, string $class, ESQLAliasInterface $a);
 
     // Todo: find an abstraction for aliases management
-    protected function toArray(array $data, array &$memory = []): array
+    protected function toArray(array $data, ESQLAliasInterface $a, array &$memory = []): array
     {
         foreach ($data as $key => $value) {
-            $aliasPos = strpos($key, '_');
-            if (false === $aliasPos) {
-                continue;
-            }
-
-            $alias = substr($key, 0, $aliasPos);
-            $key = substr($key, $aliasPos + 1);
-            $relationPos = strpos($key, '_');
-            if (!$relationPos) {
+            [$key, $alias, $relation, $relationKey] = $a->metadata($key);
+            if (!$relation) {
                 $memory[$key] = $value;
                 continue;
             }
 
-            $nextAlias = substr($key, 0, $relationPos);
-            if (!isset($memory[$nextAlias])) {
-                $memory[$nextAlias] = [];
+            if (!isset($memory[$relation])) {
+                $memory[$relation] = [];
+                $memory[$relation] = !$value || !$key ? $value : $this->toArray([$relationKey ?? $key => $value], $a, $memory[$relation]);
+            } elseif ($relationKey) {
+                $memory[$relation][$relationKey] = $value;
             }
-
-            $memory[$nextAlias] = !$value ? $value : $this->toArray([$key => $value], $memory[$nextAlias]);
         }
 
         return $memory;

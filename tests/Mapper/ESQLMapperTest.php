@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Mapper\Tests;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Jane\Component\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Automapper\ESQLMapper;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
@@ -21,16 +22,22 @@ use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Uid\Ulid;
 
 class ESQLMapperTest extends KernelTestCase
 {
     /**
      * @dataProvider getMapper
      */
-    public function testMapCar(ESQLMapperInterface $mapper): void
+    public function testMapCar(ESQLMapperInterface $mapper, ManagerRegistry $registry): void
     {
+        $esql = new ESQL($registry, $mapper);
+        $c = $esql(Car::class);
+        $m = $c(Model::class);
+
         $model = new Model();
         $model->id = 1;
         $model->name = 'Volkswagen';
@@ -45,17 +52,20 @@ class ESQLMapperTest extends KernelTestCase
         $car2->name = 'Passat';
         $car2->model = $model;
 
-        $this->assertEquals([$car, $car2], $mapper->map([
+        $this->assertEquals([$car, $car2], $c->map([
             ['car_id' => '1', 'car_name' => 'Caddy', 'car_model_id' => '1', 'car_model_name' => 'Volkswagen'],
             ['car_id' => '2', 'car_name' => 'Passat', 'car_model_id' => '1', 'car_model_name' => 'Volkswagen'],
-        ], Car::class));
+        ]));
     }
 
     /**
      * @dataProvider getMapper
      */
-    public function testMapCategory(ESQLMapperInterface $mapper): void
+    public function testMapCategory(ESQLMapperInterface $mapper, ManagerRegistry $registry): void
     {
+        $esql = new ESQL($registry, $mapper);
+        $c = $esql(Category::class);
+
         $vegetables = new Category();
         $vegetables->identifier = 'v';
         $vegetables->parent = null;
@@ -64,7 +74,39 @@ class ESQLMapperTest extends KernelTestCase
         $category->name = 'Salads';
         $category->parent = $vegetables;
 
-        $this->assertEquals($category, $mapper->map(['category_identifier' => 'salads', 'category_name' => 'Salads', 'category_parent_identifier' => 'v'], Category::class));
+        $this->assertEquals($category, $c->map(['category_identifier' => 'salads', 'category_name' => 'Salads', 'category_parent_identifier' => 'v']));
+    }
+
+    /**
+     * @dataProvider getMapper
+     */
+    public function testMapProduct(ESQLMapperInterface $mapper, ManagerRegistry $registry): void
+    {
+        $esql = new ESQL($registry, $mapper);
+        $p = $esql(Product::class);
+        $c = $p(Category::class);
+
+        $category = new Category();
+        $category->identifier = 'salads';
+        $category->name = 'Salads';
+        $category->parent = null;
+
+        $product = new Product();
+        $product->setId((string) new Ulid());
+        $product->name = 'tomato';
+        $product->description = 'a red tomato';
+        $product->categoryRelation = $category;
+        $product->gtin = 'ASDGJ499190AA';
+
+        $this->assertEquals($product, $p->map([
+            'product_id' => $product->getId(),
+            'product_name' => 'tomato',
+            'product_description' => 'a red tomato',
+            'product_categoryrelation_identifier' => $category->identifier,
+            'product_gtin' => $product->gtin,
+            'product_categoryrelation_name' => $category->name,
+            'product_categoryrelation_parent' => null,
+        ]));
     }
 
     public function getMapper(): array
@@ -74,10 +116,9 @@ class ESQLMapperTest extends KernelTestCase
         $autoMapper = $container->get(AutoMapperInterface::class);
         $registry = $container->get('doctrine');
         $normalizer = new ObjectNormalizer();
-        $esql = new ESQL($registry);
 
         return [
-            [new ESQLMapper($autoMapper)],
+            [new ESQLMapper($autoMapper), $registry],
             // [new ESQLSerializerMapper($normalizer, $esql, $registry)],
         ];
     }

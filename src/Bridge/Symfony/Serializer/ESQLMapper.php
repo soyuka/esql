@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\Symfony\Serializer;
 
+use Soyuka\ESQL\ESQLAliasInterface;
 use Soyuka\ESQL\ESQLMapper as Base;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -27,14 +28,14 @@ final class ESQLMapper extends Base implements ESQLMapperInterface
         $this->normalizer = $normalizer;
     }
 
-    public function map(array $data, string $class)
+    public function map(array $data, string $class, ESQLAliasInterface $a)
     {
         if (!\is_int(key($data))) {
-            return $this->normalizer->denormalize($this->toArray($data), $class, null, [ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true]);
+            return $this->normalizer->denormalize($this->toArray($data, $a), $class, null, [ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true]);
         }
 
         foreach ($data as $key => $value) {
-            $data[$key] = $this->normalizer->denormalize($this->toArray($value), $class, null, [ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true]);
+            $data[$key] = $this->normalizer->denormalize($this->toArray($value, $a), $class, null, [ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true]);
         }
 
         return $data;

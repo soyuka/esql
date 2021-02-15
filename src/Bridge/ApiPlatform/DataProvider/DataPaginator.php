@@ -18,10 +18,12 @@ use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
+use LogicException;
 use PhpMyAdmin\SqlParser\Components\Expression;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
+use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Exception\InvalidArgumentException;
 use Soyuka\ESQL\Exception\RuntimeException;
@@ -42,7 +44,7 @@ class DataPaginator
     private string $partialPaginationParameterName;
     public const REGEX_LAST_SELECT = '~SELECT(?!.*SELECT)~is';
     public const ORDER_BY = 'esql_order_by';
-    public const MAP_TO = 'esql_map_to';
+    public const ESQL = 'esql';
 
     public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ResourceMetadataFactoryInterface $resourceMetadataFactory, ESQLMapperInterface $mapper, PaginationOptions $paginationOptions, ?int $itemsPerPage = 30, ?int $maximumItemsPerPage = null, bool $partialPaginationEnabled = false, ?string $clientPartialPagination = null, string $partialPaginationParameterName = 'partial')
     {
@@ -130,7 +132,14 @@ SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($parameters);
         $data = $stmt->fetchAll();
-        $data = !$data ? $data : $this->mapper->map($data, $context[self::MAP_TO] ?? $resourceClass);
+
+        if (!isset($context[self::ESQL]) || !$context[self::ESQL] instanceof ESQLInterface) {
+            throw new LogicException('No alias to map to');
+        }
+
+        if ($data) {
+            $data = $context[self::ESQL]->map($data);
+        }
 
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Soyuka\ESQL\Bridge\Automapper;
 
 use Jane\Component\AutoMapper\AutoMapperInterface;
+use Soyuka\ESQL\ESQLAliasInterface;
 use Soyuka\ESQL\ESQLMapper as Base;
 use Soyuka\ESQL\ESQLMapperInterface;
 
@@ -26,14 +27,14 @@ final class ESQLMapper extends Base implements ESQLMapperInterface
         $this->automapper = $automapper;
     }
 
-    public function map(array $data, string $class)
+    public function map(array $data, string $class, ESQLAliasInterface $a)
     {
         if (!\is_int(key($data))) {
-            return $this->automapper->map($this->toArray($data), $class);
+            return $this->automapper->map($this->toArray($data, $a), $class);
         }
 
         foreach ($data as $key => $value) {
-            $data[$key] = $this->automapper->map($this->toArray($value), $class);
+            $data[$key] = $this->automapper->map($this->toArray($value, $a), $class);
         }
 
         return $data;

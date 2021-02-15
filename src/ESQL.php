@@ -13,17 +13,14 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL;
 
+use LogicException;
 use Soyuka\ESQL\Exception\InvalidArgumentException;
 
 abstract class ESQL implements ESQLInterface
 {
-    private static array $aliases = [];
-    private static array $countAliases = [];
-    private static array $classAliases = [];
-
     /** @var mixed */
     protected $metadata = null;
-    protected string $alias = '';
+    public ?ESQLAlias $alias = null;
     protected string $table = '';
     /** @var class-string */
     protected ?string $class = null;
@@ -60,17 +57,28 @@ abstract class ESQL implements ESQLInterface
      */
     abstract protected function getClassMetadata(string $class);
 
+    public function getAlias(): ESQLAliasInterface
+    {
+        if (null === $this->alias) {
+            throw new LogicException('Alias not instantiated.');
+        }
+
+        return $this->alias;
+    }
+
     public function __invoke($objectOrClass, ?string $mapTo = null): ESQLInterface
     {
         /** @var class-string */
         $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
         $that = clone $this;
 
-        if ($this->class) {
-            $that->alias = $this->alias.'_'.$this->getRelationAlias($this->mapTo ?? $this->class, $class);
+        if ($this->class && $this->alias) {
+            $relationAlias = new ESQLAlias($this->getRelationAlias($this->mapTo ?? $this->class, $class), $this->alias);
+            $this->alias->add($relationAlias);
+            $that->alias = $relationAlias;
         } else {
             /** @var ?class-string $mapTo */
-            $that->alias = strtolower((new \ReflectionClass($mapTo ?? $class))->getShortName());
+            $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
         }
 
         $that->class = $class;

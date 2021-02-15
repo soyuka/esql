@@ -33,11 +33,10 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
     private ESQLInterface $esql;
     private ContextAwareCollectionDataProviderInterface $decorated;
 
-    public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql, ContextAwareCollectionDataProviderInterface $decorated)
+    public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ESQLInterface $esql, ContextAwareCollectionDataProviderInterface $decorated)
     {
         $this->requestStack = $requestStack;
         $this->managerRegistry = $managerRegistry;
-        $this->mapper = $mapper;
         $this->esql = $esql;
         $this->decorated = $decorated;
     }
@@ -53,9 +52,7 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
         if ($data instanceof PartialPaginatorInterface && !\count($data)) {
             return $data;
         }
-
         $categories = $this->getCategories();
-
         foreach ($data as $product) {
             foreach ($categories as $category) {
                 if ($product->categoryRelation->identifier === $category->identifier) {
@@ -102,7 +99,7 @@ SQL;
 
         $stmt = $connection->executeQuery($query, $categoryParameter ? ['category' => $categoryParameter] : []);
         $data = $stmt->fetchAll();
-        $categories = $this->mapper->map($data, Category::class);
+        $categories = $category->map($data);
 
         foreach ($categories as $category) {
             if (null === $category->parent) {

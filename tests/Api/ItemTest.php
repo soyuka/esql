@@ -27,7 +27,7 @@ final class ItemTest extends ApiTestCase
         $cars = $response->toArray();
         $cars = $cars['hydra:member'];
         $iri = $cars[0]['@id'];
-        $response = static::createClient()->request('GET', $iri);
+        $response = $client->request('GET', $iri);
         $this->assertResponseIsSuccessful();
         $this->assertJsonContains([
             '@context' => '/contexts/Car',

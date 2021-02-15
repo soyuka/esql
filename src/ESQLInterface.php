@@ -95,15 +95,18 @@ interface ESQLInterface
      */
     public function __invoke($objectOrClass, ?string $mapTo = null): self;
 
-    /**
-     * Get the class alias.
-     *
-     * @param object|string $objectOrClass
-     */
-    // public static function getAlias($objectOrClass): string;
-
-    /**
-     * Get the class matching a given alias.
-     */
+    // /**
+    //  * Get the class alias.
+    //  *
+    //  * @param object|string $objectOrClass
+    //  */
+    // public function getAlias(): ?ESQLAlias;
+    //     return $thos->alias;
+    //
+    // }
+    //
+    // /**
+    //  * Get the class matching a given alias.
+    //  */
     // public static function getClass(string $alias): string;
 }

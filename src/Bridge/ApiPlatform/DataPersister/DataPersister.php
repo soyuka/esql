@@ -16,19 +16,19 @@ namespace Soyuka\ESQL\Bridge\ApiPlatform\DataPersister;
 use ApiPlatform\Core\DataPersister\ContextAwareDataPersisterInterface;
 use ApiPlatform\Core\DataPersister\DataPersisterInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Jane\Component\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Doctrine\ClassInfoTrait;
 use Soyuka\ESQL\ESQLInterface;
-use Soyuka\ESQL\ESQLMapperInterface;
 
 final class DataPersister implements DataPersisterInterface, ContextAwareDataPersisterInterface
 {
     use ClassInfoTrait;
 
     private ManagerRegistry $managerRegistry;
-    private ESQLMapperInterface $mapper;
+    private AutoMapperInterface $mapper;
     private ESQLInterface $esql;
 
-    public function __construct(ManagerRegistry $managerRegistry, ESQLMapperInterface $mapper, ESQLInterface $esql)
+    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $mapper, ESQLInterface $esql)
     {
         $this->managerRegistry = $managerRegistry;
         $this->mapper = $mapper;
@@ -69,7 +69,7 @@ SQL;
         $data = $stmt->fetch();
 
         /** @var object */
-        return $this->mapper->map($data, $this->getObjectClass($data));
+        return $esql->map($data);
     }
 
     /**
