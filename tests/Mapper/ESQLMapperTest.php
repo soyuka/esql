@@ -27,6 +27,11 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Uid\Ulid;
 
+class DTO {
+    public string $id;
+    public string $name;
+}
+
 class ESQLMapperTest extends KernelTestCase
 {
     /**
@@ -106,6 +111,30 @@ class ESQLMapperTest extends KernelTestCase
             'product_gtin' => $product->gtin,
             'product_categoryrelation_name' => $category->name,
             'product_categoryrelation_parent' => null,
+        ]));
+    }
+
+    /**
+     * @dataProvider getMapper
+     */
+    public function testMapTo(ESQLMapperInterface $mapper, ManagerRegistry $registry): void
+    {
+        $esql = new ESQL($registry, $mapper);
+        $p = $esql(Product::class, DTO::class);
+
+        $product = new Product();
+        $product->setId((string) new Ulid());
+        $product->name = 'tomato';
+        $product->description = 'a red tomato';
+        $product->gtin = 'ASDGJ499190AA';
+
+        $dto = new DTO();
+        $dto->id = $product->getId();
+        $dto->name = $product->name;
+
+        $this->assertEquals($dto, $p->map([
+            'product_id' => $product->getId(),
+            'product_name' => 'tomato'
         ]));
     }
 

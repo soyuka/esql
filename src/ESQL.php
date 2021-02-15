@@ -73,12 +73,11 @@ abstract class ESQL implements ESQLInterface
         $that = clone $this;
 
         if ($this->class && $this->alias) {
-            $relationAlias = new ESQLAlias($this->getRelationAlias($this->mapTo ?? $this->class, $class), $this->alias);
+            $relationAlias = new ESQLAlias($this->getRelationAlias($this->class, $class), $this->alias);
             $this->alias->add($relationAlias);
             $that->alias = $relationAlias;
         } else {
-            /** @var ?class-string $mapTo */
-            $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
+            $that->alias = new ESQLAlias((new \ReflectionClass($class))->getShortName());
         }
 
         $that->class = $class;

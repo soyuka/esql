@@ -152,7 +152,7 @@ final class ESQL extends Base
             throw new LogicException('No alias to map from.');
         }
 
-        return $this->mapper->map($data, $this->class, $this->alias);
+        return $this->mapper->map($data, $this->mapTo ?? $this->class, $this->alias);
     }
 
     protected function getClassMetadata(string $class)
@@ -180,12 +180,11 @@ final class ESQL extends Base
             $that = clone $this;
 
             if ($this->class && $this->alias) {
-                $relationAlias = new ESQLAlias($this->getRelationAlias($this->mapTo ?? $this->class, $class), $this->alias);
+                $relationAlias = new ESQLAlias($this->getRelationAlias($this->class, $class), $this->alias);
                 $this->alias->add($relationAlias);
                 $that->alias = $relationAlias;
             } else {
-                /** @var ?class-string $mapTo */
-                $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
+                $that->alias = new ESQLAlias((new \ReflectionClass($class))->getShortName());
             }
 
             $that->class = $class;
