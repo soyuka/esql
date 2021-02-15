@@ -19,6 +19,7 @@ use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use PhpMyAdmin\SqlParser\Components\Expression;
+use PhpMyAdmin\SqlParser\Components\GroupKeyword;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
@@ -117,17 +118,29 @@ class DataPaginator
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
             case 'pdo_sqlsrv':
-                /** @var string */
+                Context::setMode('NO_ENCLOSING_QUOTES');
+                $parser = new Parser($query);
                 $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
-                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
-                $query = <<<SQL
+
+                if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
+                    /** @var string */
+                    $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
+                    $query = <<<SQL
 $query
 ) AS paginated
 WHERE RowNumber BETWEEN $firstResult AND $nextResult
 SQL;
+                } else {
+                    $statement = $parser->statements[0];
+                    if ($statement->order) {
+                        $query = "$query OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
+                    } else {
+                        $query = "$query ORDER BY $orderBy OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
+                    }
+                }
                 break;
             default:
-            $query = $query.' LIMIT '.$itemsPerPage.' OFFSET '.$firstResult;
+                $query = "$query LIMIT $itemsPerPage OFFSET $firstResult";
         }
 
         $connection = $this->managerRegistry->getConnection();
@@ -152,11 +165,9 @@ SQL;
         if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
             switch ($driverName) {
                 case 'pdo_sqlsrv':
-                if (!isset($context[self::ORDER_BY])) {
-                    throw new RuntimeException('An ORDER_BY clause is needed to use ROW_NUMBER');
-                }
-
-                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$context[self::ORDER_BY]}) AS RowNumber,", $query, 1);
+                /** @var string */
+                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
                 $query = <<<SQL
 $query
 ) AS paginated
@@ -173,6 +184,17 @@ SQL;
             $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
 
             switch ($driverName) {
+                case 'pdo_sqlsrv':
+                    // Use a window with postgresql
+                    if ($statement->order && !$statement->group) {
+                        $dump = true;
+                        $statement->group = [];
+                        foreach ($statement->order as $order) {
+                            $statement->group[] = new GroupKeyword($order->expr);
+                        }
+                    }
+                    $query = $statement->build();
+                    break;
                 case 'pdo_pgsql':
                     // Use a window with postgresql
                     if ($statement->order) {

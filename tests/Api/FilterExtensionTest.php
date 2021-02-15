@@ -37,7 +37,7 @@ final class FilterExtensionTest extends AbstractTest
         $container = $kernel->getContainer();
         $registry = $container->get('doctrine');
 
-        if ('pdo_sqlite' === $registry->getConnection()->getDriver()->getName()) {
+        if (\in_array($registry->getConnection()->getDriver()->getName(), ['pdo_sqlite', 'pdo_sqlsrv'], true)) {
             $this->markTestSkipped();
         }
 

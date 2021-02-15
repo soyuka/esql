@@ -39,7 +39,7 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request || !$request->query->has('category') || null === $categoryParameter = $request->query->get('category')) {
-            return [$query, $parameters];
+            return [$query, $parameters, $context];
         }
 
         /** @psalm-suppress DocblockTypeContradiction */
@@ -51,7 +51,7 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
         $category = $product(Category::class);
 
         $query = <<<SQL
-WITH RECURSIVE
+WITH
     descendants(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE c.identifier = :category
         UNION ALL
@@ -63,7 +63,7 @@ SQL;
 
         $parameters['category'] = $categoryParameter;
 
-        return [$query, $parameters];
+        return [$query, $parameters, $context];
     }
 
     public function supports(string $resourceClass, ?string $operationName = null, array $context = []): bool

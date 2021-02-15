@@ -34,6 +34,14 @@ final class SortExtensionTest extends AbstractTest
 
     public function testGetCollectionSortByNameAndColorNulls(): void
     {
+        $kernel = self::bootKernel();
+        $container = $kernel->getContainer();
+        $registry = $container->get('doctrine');
+
+        if (\in_array($registry->getConnection()->getDriver()->getName(), ['pdo_sqlsrv'], true)) {
+            $this->markTestSkipped();
+        }
+
         $response = static::createClient()->request('GET', '/cars?sort=color.asc.nullsfirst');
         $this->assertResponseIsSuccessful();
         $this->assertNull($response->toArray()['hydra:member'][0]['color']);
