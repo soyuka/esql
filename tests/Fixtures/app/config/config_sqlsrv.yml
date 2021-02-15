@@ -1,6 +1,9 @@
 imports:
     - { resource: config.yml }
 
+parameters:
+    env(DATABASE_URL): mssql://sa:ApiPlatformRocks2020!@localhost/api_platform_test
+
 doctrine:
     dbal:
         driver: pdo_sqlsrv

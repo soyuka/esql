@@ -196,7 +196,9 @@ ESQL works using aliases and mapping them to classes and their properties. When 
 <?php
 
 $car = $esql(Car::class);
+$car->alias(); // car
 $model = $car(Model::class);
+$model->alias(); // car_model
 ```
 
 This way, ESQL knows to map the `Model` to the `Car->model` property. When working with DTOs the relation may not be found and you can alias the relation yourself:

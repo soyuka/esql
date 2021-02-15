@@ -31,3 +31,12 @@ ESQL_DB=postgres tests/Fixtures/app/console cache:clear
 ESQL_DB=postgres d:s:c # doctrine:schema:create
 ESQL_DB=postgres vendor/bin/phpunit --stop-on-failure
 ```
+
+## SQL Server
+
+```
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=ApiPlatformRocks2020!' -p 1433:1433 mcr.microsoft.com/mssql/server:2019-latest
+ESQL_DB=sqlsrv tests/Fixtures/app/console cache:clear
+ESQL_DB=sqlsrv d:s:c # doctrine:schema:create
+ESQL_DB=sqlsrv vendor/bin/phpunit --stop-on-failure
+```
