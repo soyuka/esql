@@ -181,13 +181,13 @@ jobs:
       fail-fast: false
     env:
       ESQL_DB: sqlsrv
-      DATABASE_URL: sqlsrv://sa:apiplatformrocks@localhost/api_platform_test
+      DATABASE_URL: sqlsrv://sa:ApiPlatformRocks2020!@localhost/api_platform_test
     services:
       sqlsrv:
-        image: mcr.microsoft.com/mssql/server:2017-latest
+        image: mcr.microsoft.com/mssql/server:2019-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: apiplatformrocks
+          SA_PASSWORD: ApiPlatformRocks2020!
         ports:
           - 1433:1433
     steps:
@@ -195,19 +195,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Setup sqlserver
         run: |
-          docker ps
-          for i in {1..50};
-          do
-            docker exec -it sqlsrv p/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P apiplatformrocks -d master -Q "CREATE DATABASE api_platform_test;"
-            if [ $? -eq 0 ]
-            then
-              echo "setup.sql completed"
-              break
-            else
-              echo "not ready yet..."
-              sleep 1
-            fi
-          done
+          sleep 7
+          echo $(docker ps | tail -n 1 | awk '{print $1}')
+          docker exec $(docker ps | tail -n 1 | awk '{print $1}') /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ApiPlatformRocks2020! -d master -Q "CREATE DATABASE api_platform_test;"
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
