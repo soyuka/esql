@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests;
 
+use InvalidArgumentException;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
@@ -23,6 +24,17 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 final class Aggregate
 {
     public Model $model;
+}
+
+final class AggregateSimilar
+{
+    public Model $firstModel;
+    public Model $secondModel;
+}
+
+final class Dto
+{
+    public string $model;
 }
 
 class ESQLTest extends KernelTestCase
@@ -58,7 +70,6 @@ class ESQLTest extends KernelTestCase
 
     public function testEsqlCustomAlias(): void
     {
-        $this->markTestSkipped();
         $container = self::$kernel->getContainer();
         $registry = $container->get('doctrine');
         $esql = new ESQL($registry);
@@ -68,6 +79,40 @@ class ESQLTest extends KernelTestCase
 
         $this->assertEquals($statistics->alias(), 'aggregate');
         $this->assertEquals($category->alias(), 'aggregate_model');
+    }
+
+    public function testEsqlDtoNoType(): void
+    {
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $statistics = $esql(Product::class, Dto::class);
+
+        $this->assertEquals($statistics->columns(), 'dto.id as dto_id, dto.name as dto_name, dto.description as dto_description, dto.gtin as dto_gtin, dto.category_id as dto_categoryrelation_identifier');
+    }
+
+    public function testEsqlDtoMultipleSameType(): void
+    {
+        $container = self::$kernel->getContainer();
+        $registry = $container->get('doctrine');
+        $esql = new ESQL($registry);
+
+        $statistics = $esql(Product::class, AggregateSimilar::class);
+        $model = $statistics(Model::class);
+        $secondModel = $statistics(Model::class);
+
+        $this->assertEquals('aggregatesimilar_firstmodel', $model->alias());
+        $this->assertEquals('aggregatesimilar_secondmodel', $secondModel->alias());
+
+        try {
+            $thirdModel = $statistics(Model::class);
+        } catch (InvalidArgumentException $e) {
+            $this->assertNotNull($e);
+        }
+
+        $thirdModel = $statistics(Model::class, 'MyOwnAlias');
+        $this->assertEquals('aggregatesimilar_myownalias', $thirdModel->alias());
     }
 
     public function testEsql(): void

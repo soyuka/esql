@@ -38,6 +38,11 @@ interface ESQLAliasInterface
     public function getAliasedTo(string $property): string;
 
     /**
+     * Whether the property is already aliased.
+     */
+    public function hasAlias(string $property): bool;
+
+    /**
      * The origin alias name.
      */
     public function getAlias(): string;

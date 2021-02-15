@@ -27,7 +27,8 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Uid\Ulid;
 
-class DTO {
+class DTO
+{
     public string $id;
     public string $name;
 }
@@ -134,7 +135,7 @@ class ESQLMapperTest extends KernelTestCase
 
         $this->assertEquals($dto, $p->map([
             'product_id' => $product->getId(),
-            'product_name' => 'tomato'
+            'product_name' => 'tomato',
         ]));
     }
 

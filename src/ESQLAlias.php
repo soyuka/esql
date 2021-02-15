@@ -69,6 +69,17 @@ final class ESQLAlias implements ESQLAliasInterface
         return $property;
     }
 
+    public function hasAlias(string $property): bool
+    {
+        foreach ($this->aliases as $alias) {
+            if ($alias->getAlias() === $property) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function getAlias(): string
     {
         return $this->alias;

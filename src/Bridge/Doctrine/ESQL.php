@@ -69,10 +69,16 @@ final class ESQL extends Base
                 continue;
             }
 
-            $relationAlias = $this->__invoke($association['targetEntity']);
+            try {
+                $relation = $this->__invoke($association['targetEntity']);
+                $relationAlias = $relation->alias();
+            } catch (InvalidArgumentException $e) {
+                $relationAlias = (string) new ESQLAlias($fieldName, $this->alias);
+            }
+
             foreach ($association['joinColumns'] as $i => $joinColumn) {
                 $columnName = "$this->alias.{$joinColumn['name']}";
-                $aliased = " as {$relationAlias->alias()}_{$joinColumn['referencedColumnName']}";
+                $aliased = " as {$relationAlias}_{$joinColumn['referencedColumnName']}";
                 $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
             }
         }
@@ -101,10 +107,16 @@ final class ESQL extends Base
         foreach ($this->metadata->getAssociationMappings() as $association) {
             if ($association['targetEntity'] === $relationMetadata->name) {
                 $str = '';
-                $relationAlias = $this->__invoke($relationClass);
+                try {
+                    $relation = $this->__invoke($association['targetEntity']);
+                    $relationAlias = $relation->alias();
+                } catch (InvalidArgumentException $e) {
+                    $relationAlias = (string) new ESQLAlias($association['fieldName'], $this->alias);
+                }
+
                 foreach ($association['joinColumns'] as $i => $joinColumn) {
                     $str .= 0 === $i ? '' : ' AND ';
-                    $str .= "{$relationAlias->alias()}.{$joinColumn['referencedColumnName']}";
+                    $str .= "{$relationAlias}.{$joinColumn['referencedColumnName']}";
                     $str .= " = {$this->alias}.{$joinColumn['name']}";
                 }
 
@@ -180,11 +192,11 @@ final class ESQL extends Base
             $that = clone $this;
 
             if ($this->class && $this->alias) {
-                $relationAlias = new ESQLAlias($this->getRelationAlias($this->class, $class), $this->alias);
+                $relationAlias = new ESQLAlias($this->getRelationAlias($this->mapTo ?? $this->class, $class), $this->alias);
                 $this->alias->add($relationAlias);
                 $that->alias = $relationAlias;
             } else {
-                $that->alias = new ESQLAlias((new \ReflectionClass($class))->getShortName());
+                $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
             }
 
             $that->class = $class;
@@ -200,9 +212,18 @@ final class ESQL extends Base
 
     private function getRelationAlias(string $class, string $relationClass): string
     {
-        $metadata = $this->getClassMetadata($class);
-        $relationMetadata = $this->getClassMetadata($relationClass);
+        try {
+            $metadata = $this->getClassMetadata($class);
+            $relationMetadata = $this->getClassMetadata($relationClass);
+        } catch (RuntimeException $e) {
+            throw new InvalidArgumentException(sprintf('%s has no relation with %s.', $class, $relationClass));
+        }
+
         foreach ($metadata->getAssociationMappings() as $association) {
+            if ($this->alias->hasAlias($association['fieldName'])) {
+                continue;
+            }
+
             if ($association['targetEntity'] === $relationMetadata->name) {
                 return $association['fieldName'];
             }
