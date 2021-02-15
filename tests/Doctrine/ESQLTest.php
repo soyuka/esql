@@ -164,6 +164,7 @@ WHERE car.id = :id', $query
         $this->assertEquals($car->columns(['name', 'price'], $car::AS_ARRAY | $car::WITHOUT_ALIASES), ['car.name', 'car.price']);
         $this->assertEquals($car->columns(['name', 'model'], $car::AS_ARRAY), ['car.name as car_name', 'car.model_id as car_model_id']);
         $this->assertEquals($car->columns(null, $car::WITHOUT_ALIASES | $car::WITHOUT_JOIN_COLUMNS), 'car.id, car.name, car.color, car.price, car.sold');
+        $this->assertEquals($car->columns(null, $car::WITHOUT_ALIASES | $car::WITHOUT_JOIN_COLUMNS | $car::IDENTIFIERS), 'car.id');
     }
 
     protected function setUp(): void

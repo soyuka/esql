@@ -43,7 +43,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request) {
-            return [$query, $parameters];
+            return [$query, $parameters, $context];
         }
 
         $esql = $this->esql->__invoke($resourceClass);
@@ -68,7 +68,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         }
 
         if (!$filterQuery) {
-            return [$query, $parameters];
+            return [$query, $parameters, $context];
         }
 
         [$filterSQL, $filterParameters] = $this->filterParser->parse($filterQuery, $resourceClass);
@@ -81,7 +81,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
             $query .= " WHERE $filterSQL";
 
-            return [$query, $parameters];
+            return [$query, $parameters, $context];
         }
 
         $statement = $parser->statements[0];
@@ -89,7 +89,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
             $statement->where = [new Condition($filterSQL)];
         }
 
-        return [$statement->build(), $parameters];
+        return [$statement->build(), $parameters, $context];
     }
 
     public function supports(string $resourceClass, ?string $operationName = null, array $context = []): bool

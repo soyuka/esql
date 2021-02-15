@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
 use Soyuka\ESQL\ESQLInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -41,7 +42,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request || !$request->query->has(self::PARAMETER_NAME) || null === $sort = $request->query->get(self::PARAMETER_NAME)) {
-            return [$query, $parameters];
+            return [$query, $parameters, $context];
         }
 
         $esql = $this->esql->__invoke($resourceClass);
@@ -70,7 +71,9 @@ final class SortExtension implements QueryCollectionExtensionInterface
             }
         }
 
-        return [$orderClauses ? $query.' ORDER BY '.implode(', ', $orderClauses) : $query, $parameters];
+        $context[DataPaginator::ORDER_BY] = implode(', ', $orderClauses);
+
+        return [$orderClauses ? $query.' ORDER BY '.$context[DataPaginator::ORDER_BY] : $query, $parameters, $context];
     }
 
     private function getPredicate(?string $predicate = null): ?string

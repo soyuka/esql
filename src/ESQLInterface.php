@@ -19,6 +19,7 @@ interface ESQLInterface
     public const AS_ARRAY = 2;
     public const WITHOUT_ALIASES = 4;
     public const WITHOUT_JOIN_COLUMNS = 8;
+    public const IDENTIFIERS = 16;
 
     /**
      * Retrieves the table.
@@ -31,7 +32,7 @@ interface ESQLInterface
     public function alias(): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS, ESQLInterface::IDENTIFIERS>
      *
      * @param TFlags $output
      *
@@ -55,7 +56,7 @@ interface ESQLInterface
     public function join(string $relationClass): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY>
      *
      * @param TFlags $output
      *

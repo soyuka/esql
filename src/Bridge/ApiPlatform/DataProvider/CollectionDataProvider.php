@@ -61,7 +61,7 @@ SQL;
         $parameters = [];
         foreach ($this->collectionExtensions as $extension) {
             if ($extension->supports($resourceClass, $operationName, $context)) {
-                [$query, $parameters] = $extension->apply($query, $resourceClass, $operationName, $parameters, $context);
+                [$query, $parameters, $context] = $extension->apply($query, $resourceClass, $operationName, $parameters, $context);
             }
         }
 
