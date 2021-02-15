@@ -117,7 +117,8 @@ class DataPaginator
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
             case 'pdo_sqlsrv':
-                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS);
+                /** @var string */
+                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
                 $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
                 $query = <<<SQL
 $query

@@ -32,7 +32,7 @@ interface ESQLInterface
     public function alias(): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS, ESQLInterface::IDENTIFIERS>
      *
      * @param TFlags $output
      *
@@ -56,7 +56,7 @@ interface ESQLInterface
     public function join(string $relationClass): string;
 
     /**
-     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY, ESQLInterface::WITHOUT_ALIASES, ESQLInterface::WITHOUT_JOIN_COLUMNS>
+     * @template TFlags as int-mask<ESQLInterface::AS_STRING, ESQLInterface::AS_ARRAY>
      *
      * @param TFlags $output
      *
