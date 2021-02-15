@@ -3,8 +3,9 @@ imports:
 
 doctrine:
     dbal:
+        driver: pdo_sqlsrv
+        url: '%env(resolve:DATABASE_URL)%'
         path: ~
-        dbname: master
 
     orm:
         auto_generate_proxy_classes:   '%kernel.debug%'

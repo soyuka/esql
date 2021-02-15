@@ -109,6 +109,7 @@ class DataPaginator
 
         $firstResult = ($page - 1) * $itemsPerPage;
         $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters, $context);
+        $nextResult = $firstResult + $itemsPerPage;
 
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
@@ -121,7 +122,7 @@ class DataPaginator
                 $query = <<<SQL
 $query
 ) AS paginated
-WHERE RowNumber BETWEEN $firstResult AND $itemsPerPage
+WHERE RowNumber BETWEEN $firstResult AND $nextResult
 SQL;
                 break;
             default:
