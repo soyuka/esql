@@ -13,13 +13,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
-use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
-use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
-
-final class CollectionTest extends ApiTestCase
+final class CollectionTest extends AbstractTest
 {
-    use RefreshDatabaseTrait;
-
     public function testGetCollection(): void
     {
         $response = static::createClient()->request('GET', '/cars');

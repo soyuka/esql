@@ -13,13 +13,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
-use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
-use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
-
-final class FilterExtensionTest extends ApiTestCase
+final class FilterExtensionTest extends AbstractTest
 {
-    use RefreshDatabaseTrait;
-
     public function testSimpleFilter(): void
     {
         $response = static::createClient()->request('GET', '/cars?sold=eq.true');

@@ -13,13 +13,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
-use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
-use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
-
-final class SortExtensionTest extends ApiTestCase
+final class SortExtensionTest extends AbstractTest
 {
-    use RefreshDatabaseTrait;
-
     public function testGetCollectionSortByName(): void
     {
         $response = static::createClient()->request('GET', '/cars?sort=name.asc');

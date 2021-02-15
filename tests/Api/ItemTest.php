@@ -11,15 +11,10 @@
 
 declare(strict_types=1);
 
-namespace App\Tests;
+namespace App\Tests\Api;
 
-use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
-use Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait;
-
-final class ItemTest extends ApiTestCase
+final class ItemTest extends AbstractTest
 {
-    use RefreshDatabaseTrait;
-
     public function testGetItem(): void
     {
         $client = static::createClient();
