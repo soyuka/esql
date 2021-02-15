@@ -19,6 +19,7 @@ interface ESQLInterface
     public const AS_ARRAY = 2;
     public const WITHOUT_ALIASES = 4;
     public const WITHOUT_JOIN_COLUMNS = 8;
+    public const IDENTIFIERS = 16;
 
     /**
      * Retrieves the table.

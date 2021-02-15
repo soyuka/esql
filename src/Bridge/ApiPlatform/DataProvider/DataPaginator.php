@@ -18,7 +18,6 @@ use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
-use LogicException;
 use PhpMyAdmin\SqlParser\Components\Expression;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
@@ -80,6 +79,10 @@ class DataPaginator
             throw new RuntimeException('Not in a request');
         }
 
+        if (!isset($context[self::ESQL]) || !$context[self::ESQL] instanceof ESQLInterface) {
+            throw new RuntimeException('No alias to map to');
+        }
+
         $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
         $isPartialEnabled = $this->isPartialPaginationEnabled(
             $request,
@@ -114,11 +117,8 @@ class DataPaginator
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
             case 'pdo_sqlsrv':
-                if (!isset($context[self::ORDER_BY])) {
-                    throw new RuntimeException('An ORDER_BY clause is needed to use ROW_NUMBER');
-                }
-
-                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$context[self::ORDER_BY]}) AS RowNumber,", $query, 1);
+                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS);
+                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
                 $query = <<<SQL
 $query
 ) AS paginated
@@ -133,10 +133,6 @@ SQL;
         $stmt = $connection->prepare($query);
         $stmt->execute($parameters);
         $data = $stmt->fetchAll();
-
-        if (!isset($context[self::ESQL]) || !$context[self::ESQL] instanceof ESQLInterface) {
-            throw new LogicException('No alias to map to');
-        }
 
         if ($data) {
             $data = $context[self::ESQL]->map($data);

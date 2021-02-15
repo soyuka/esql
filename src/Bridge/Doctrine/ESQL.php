@@ -55,6 +55,10 @@ final class ESQL extends Base
                 continue;
             }
 
+            if ($output & ESQLInterface::IDENTIFIERS && !($fieldMapping['id'] ?? null)) {
+                continue;
+            }
+
             $columnName = "{$this->alias}.{$fieldMapping['columnName']}";
             $aliased = " as {$this->alias}_{$fieldName}";
             $columns[] = $onlyColumnNames ? $columnName : $columnName.$aliased;
