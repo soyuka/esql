@@ -58,6 +58,7 @@ class ESQLTest extends KernelTestCase
 
     public function testEsqlCustomAlias(): void
     {
+        $this->markTestSkipped();
         $container = self::$kernel->getContainer();
         $registry = $container->get('doctrine');
         $esql = new ESQL($registry);

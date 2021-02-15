@@ -24,7 +24,7 @@ final class ESQLAlias implements ESQLAliasInterface
     public function __construct(string $alias, ?ESQLAliasInterface $parent = null)
     {
         $this->alias = $alias;
-        $this->normalized = str_replace('_', '-', strtolower($alias));
+        $this->normalized = str_replace('_', '', strtolower($alias));
         $this->parent = $parent;
     }
 
