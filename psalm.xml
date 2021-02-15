@@ -43,6 +43,11 @@
           <directory name="tests" />
         </errorLevel>
       </TooManyArguments>
+      <UndefinedClass>
+        <errorLevel type="suppress">
+          <directory name="tests/Api" />
+        </errorLevel>
+      </UndefinedClass>
     </issueHandlers>
     <projectFiles>
         <directory name="src" />
@@ -50,6 +55,7 @@
         <ignoreFiles>
             <directory name="vendor" />
             <directory name="tests/Fixtures/app" />
+            <file name="tests/Api/AbstractTest.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

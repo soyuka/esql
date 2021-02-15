@@ -77,6 +77,7 @@ abstract class ESQL implements ESQLInterface
             $this->alias->add($relationAlias);
             $that->alias = $relationAlias;
         } else {
+            /** @var ?class-string $mapTo */
             $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
         }
 
@@ -97,7 +98,7 @@ abstract class ESQL implements ESQLInterface
     {
         $refl = new \ReflectionClass($class);
         foreach ($refl->getProperties() as $prop) {
-            if ($this->alias->hasAlias($prop->getName())) {
+            if ($this->alias && $this->alias->hasAlias($prop->getName())) {
                 continue;
             }
 

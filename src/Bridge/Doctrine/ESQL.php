@@ -196,6 +196,7 @@ final class ESQL extends Base
                 $this->alias->add($relationAlias);
                 $that->alias = $relationAlias;
             } else {
+                /** @var ?class-string $mapTo */
                 $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
             }
 
@@ -220,7 +221,7 @@ final class ESQL extends Base
         }
 
         foreach ($metadata->getAssociationMappings() as $association) {
-            if ($this->alias->hasAlias($association['fieldName'])) {
+            if ($this->alias && $this->alias->hasAlias($association['fieldName'])) {
                 continue;
             }
 
