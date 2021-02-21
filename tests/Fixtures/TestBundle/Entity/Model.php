@@ -19,9 +19,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ApiResource(attributes={"esql"=true})
  * @ORM\Entity
  */
+#[ApiResource(attributes: ['esql' => true])]
 class Model
 {
     /**

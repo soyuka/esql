@@ -66,7 +66,7 @@ abstract class ESQL implements ESQLInterface
         return $this->alias;
     }
 
-    public function __invoke($objectOrClass, ?string $mapTo = null): ESQLInterface
+    public function __invoke($objectOrClass, ?string $mapTo = null, ?string $aliasTo = null): ESQLInterface
     {
         /** @var class-string */
         $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
@@ -78,7 +78,7 @@ abstract class ESQL implements ESQLInterface
             $that->alias = $relationAlias;
         } else {
             /** @var ?class-string $mapTo */
-            $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
+            $that->alias = new ESQLAlias($aliasTo ?? (new \ReflectionClass($mapTo ?? $class))->getShortName());
         }
 
         $that->class = $class;

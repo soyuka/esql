@@ -18,8 +18,6 @@ use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\Persistence\ManagerRegistry;
-use PhpMyAdmin\SqlParser\Components\Expression;
-use PhpMyAdmin\SqlParser\Components\GroupKeyword;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
 use PhpMyAdmin\SqlParser\Statements\SelectStatement;
@@ -42,9 +40,8 @@ class DataPaginator
     private bool $partialPaginationEnabled;
     private ?string $clientPartialPagination;
     private string $partialPaginationParameterName;
-    public const REGEX_LAST_SELECT = '~SELECT(?!.*SELECT)~is';
+    public const REGEX_LAST_SELECT = '~SELECT(?![^(]*\))~i';
     public const ORDER_BY = 'esql_order_by';
-    public const ESQL = 'esql';
 
     public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ResourceMetadataFactoryInterface $resourceMetadataFactory, ESQLMapperInterface $mapper, PaginationOptions $paginationOptions, ?int $itemsPerPage = 30, ?int $maximumItemsPerPage = null, bool $partialPaginationEnabled = false, ?string $clientPartialPagination = null, string $partialPaginationParameterName = 'partial')
     {
@@ -60,28 +57,30 @@ class DataPaginator
         $this->partialPaginationParameterName = $partialPaginationParameterName;
     }
 
-    public function shouldPaginate(string $resourceClass, ?string $operationName = null): bool
+    public function getPaginator(string $resourceClass, ?string $operationName = null): ?\Closure
     {
         $request = $this->requestStack->getCurrentRequest();
         $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
 
-        return null !== $request && ($this->isPaginationEnabled($request, $resourceMetadata, $operationName) || $this->isPartialPaginationEnabled(
+        if (null !== $request && ($this->isPaginationEnabled($request, $resourceMetadata, $operationName) || $this->isPartialPaginationEnabled(
             $request,
             $resourceMetadata,
             $operationName
-        ));
+        ))) {
+            return function (ESQLInterface $esql, string $query, array $parameters, array $context = []) use ($resourceClass, $operationName) {
+                return $this->paginate($esql, $query, $parameters, $this->getPaginationOptions($resourceClass, $operationName), $context);
+            };
+        }
+
+        return null;
     }
 
-    public function paginate(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): PartialPaginatorInterface
+    public function getPaginationOptions(string $resourceClass, ?string $operationName = null): array
     {
         $request = $this->requestStack->getCurrentRequest();
 
         if (null === $request) {
             throw new RuntimeException('Not in a request');
-        }
-
-        if (!isset($context[self::ESQL]) || !$context[self::ESQL] instanceof ESQLInterface) {
-            throw new RuntimeException('No alias to map to');
         }
 
         $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
@@ -112,8 +111,14 @@ class DataPaginator
         }
 
         $firstResult = ($page - 1) * $itemsPerPage;
-        $totalItems = $isPartialEnabled ? -1 : $this->count($query, $parameters, $context);
         $nextResult = $firstResult + $itemsPerPage;
+
+        return ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled];
+    }
+
+    protected function paginate(ESQLInterface $esql, string $query, array $parameters, array $paginationOptions, array $context = []): PartialPaginatorInterface
+    {
+        ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $paginationOptions;
 
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
@@ -121,7 +126,7 @@ class DataPaginator
                 Context::setMode('NO_ENCLOSING_QUOTES');
                 $parser = new Parser($query);
                 /** @var string */
-                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+                $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
 
                 if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
                     /** @var string */
@@ -150,62 +155,31 @@ SQL;
         $data = $stmt->fetchAll();
 
         if ($data) {
-            $data = $context[self::ESQL]->map($data);
+            $data = $esql->map($data);
         }
 
-        return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $totalItems);
+        return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $this->count($esql, $query, $parameters, $context));
     }
 
-    protected function count(string $query, array $parameters = [], array $context = []): float
+    protected function count(ESQLInterface $esql, string $query, array $parameters = [], array $context = []): float
     {
         $connection = $this->managerRegistry->getConnection();
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
 
-        Context::setMode('NO_ENCLOSING_QUOTES');
-        $parser = new Parser($query);
-        if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
-            switch ($driverName) {
-                case 'pdo_sqlsrv':
-                /** @var string */
-                $orderBy = $context[self::ORDER_BY] ?? $context[self::ESQL]->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
-                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
-                $query = <<<SQL
+        switch ($driverName) {
+            case 'pdo_sqlsrv':
+            /** @var string */
+            $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+            $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
+            $query = <<<SQL
 $query
 ) AS paginated
 SQL;
-                    break;
-                case 'pdo_pgsql':
-                    $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
-                    break;
-                default:
-                    $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) AS _esql_count,', $query, 1);
-            }
-        } else {
-            $statement = $parser->statements[0];
-            $statement->expr = [new Expression('COUNT(1)', '_esql_count')];
-
-            switch ($driverName) {
-                case 'pdo_sqlsrv':
-                    // Use a window with postgresql
-                    if ($statement->order && !$statement->group) {
-                        $dump = true;
-                        $statement->group = [];
-                        foreach ($statement->order as $order) {
-                            $statement->group[] = new GroupKeyword($order->expr);
-                        }
-                    }
-                    $query = $statement->build();
-                    break;
-                case 'pdo_pgsql':
-                    // Use a window with postgresql
-                    if ($statement->order) {
-                        $statement->expr = [new Expression('COUNT(1) OVER ()', '_esql_count')];
-                    }
-                    $query = $statement->build().' LIMIT 1';
-                    break;
-                default:
-                    $query = $statement->build();
-            }
+                break;
+            case 'pdo_pgsql':
+            case 'pdo_sqlite':
+                $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
+                break;
         }
 
         $stmt = $connection->prepare($query);

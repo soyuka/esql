@@ -28,7 +28,13 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         model: '@model_vw'
         price: 1000000
         sold: true
-
+    car_statistics_{1..1000}:
+        model: '@models*'
+        name: <carName('f')>
+        price: <randomNumber()>
+        # Do not use colors that could be in safeColorName above
+        color: '<randomElement(["color1", "color2", "color3", "color4"])>'
+        sold: '50% ? <boolval(1)> : <boolval(0)>'
 
 Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Model:
     models_{1..10}:

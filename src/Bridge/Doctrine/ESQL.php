@@ -186,10 +186,10 @@ final class ESQL extends Base
         return $classMetadata;
     }
 
-    public function __invoke($objectOrClass, ?string $mapTo = null): ESQLInterface
+    public function __invoke($objectOrClass, ?string $mapTo = null, ?string $aliasTo = null): ESQLInterface
     {
         try {
-            return parent::__invoke($objectOrClass, $mapTo);
+            return parent::__invoke($objectOrClass, $mapTo, $aliasTo);
         } catch (InvalidArgumentException $e) {
             /** @var class-string */
             $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
@@ -201,7 +201,7 @@ final class ESQL extends Base
                 $that->alias = $relationAlias;
             } else {
                 /** @var ?class-string $mapTo */
-                $that->alias = new ESQLAlias((new \ReflectionClass($mapTo ?? $class))->getShortName());
+                $that->alias = new ESQLAlias($aliasTo ?? (new \ReflectionClass($mapTo ?? $class))->getShortName());
             }
 
             $that->class = $class;

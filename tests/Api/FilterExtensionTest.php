@@ -27,8 +27,9 @@ final class FilterExtensionTest extends AbstractTest
                 ['name' => 'golf', 'sold' => true],
                 ['name' => 'caddy', 'sold' => true],
             ],
-            'hydra:totalItems' => 2,
         ]);
+
+        $this->assertGreaterThanOrEqual(2, $response->toArray()['hydra:totalItems']);
     }
 
     public function testComplexFilter(): void
