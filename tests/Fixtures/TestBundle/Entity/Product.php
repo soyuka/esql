@@ -20,9 +20,9 @@ use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
 use Symfony\Component\Uid\Ulid;
 
 /**
- * @ApiResource(iri="http://schema.org/Product", attributes={"esql"=true})
  * @ORM\Entity
  */
+#[ApiResource(iri: 'http://schema.org/Product', attributes: ['esql' => true])]
 class Product
 {
     /**
@@ -35,34 +35,32 @@ class Product
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @ApiProperty(iri="http://schema.org/name")
      */
+    #[ApiProperty(iri: 'http://schema.org/name')]
     public string $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @ApiProperty(iri="http://schema.org/description")
      */
+    #[ApiProperty(iri: 'http://schema.org/description')]
     public string $description;
 
     /**
      * @ORM\ManyToOne(targetEntity=Category::class)
      * @ORM\JoinColumn(name="category_id", referencedColumnName="identifier")
-     * @ApiProperty(readable=false)
      *
      * @var Category
      */
+    #[ApiProperty(readable: false)]
     public $categoryRelation; // this property is not typed on purpose
 
-    /**
-     * @ApiProperty(iri="http://schema.org/category")
-     */
+    #[ApiProperty(iri: 'http://schema.org/category')]
     private string $category = '';
 
     /**
-     * @ApiProperty(iri="https://schema.org/gtin")
      * @ORM\Column(type="string", length=14)
      */
+    #[ApiProperty(iri: 'http://schema.org/gtin')]
     public string $gtin;
 
     public function setId(string $id): self

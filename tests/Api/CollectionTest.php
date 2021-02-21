@@ -23,12 +23,12 @@ final class CollectionTest extends AbstractTest
             '@context' => '/contexts/Car',
             '@id' => '/cars',
             '@type' => 'hydra:Collection',
-            'hydra:totalItems' => 33,
+            'hydra:totalItems' => 1033,
             'hydra:view' => [
                 '@id' => '/cars?page=1',
                 '@type' => 'hydra:PartialCollectionView',
                 'hydra:first' => '/cars?page=1',
-                'hydra:last' => '/cars?page=4',
+                'hydra:last' => '/cars?page=104',
                 'hydra:next' => '/cars?page=2',
             ],
         ]);
@@ -42,12 +42,12 @@ final class CollectionTest extends AbstractTest
             '@context' => '/contexts/Car',
             '@id' => '/cars',
             '@type' => 'hydra:Collection',
-            'hydra:totalItems' => 33,
+            'hydra:totalItems' => 1033,
             'hydra:view' => [
                 '@id' => '/cars?page=2',
                 '@type' => 'hydra:PartialCollectionView',
                 'hydra:first' => '/cars?page=1',
-                'hydra:last' => '/cars?page=4',
+                'hydra:last' => '/cars?page=104',
                 'hydra:next' => '/cars?page=3',
             ],
         ]);
@@ -77,6 +77,33 @@ final class CollectionTest extends AbstractTest
                 '@id' => '/cars?partial=true&page=4',
                 '@type' => 'hydra:PartialCollectionView',
                 'hydra:previous' => '/cars?partial=true&page=3',
+            ],
+        ]);
+    }
+
+    public function testStatistics(): void
+    {
+        $response = static::createClient()->request('GET', '/statistics/cars');
+        $this->assertResponseIsSuccessful();
+        $this->assertJsonContains([
+            '@context' => '/contexts/CarStatistics',
+            '@id' => '/statistics/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:view' => [
+                '@id' => '/statistics/cars?page=1',
+                '@type' => 'hydra:PartialCollectionView',
+            ],
+        ]);
+
+        $response = static::createClient()->request('GET', '/statistics/cars?page=2');
+        $this->assertResponseIsSuccessful();
+        $this->assertJsonContains([
+            '@context' => '/contexts/CarStatistics',
+            '@id' => '/statistics/cars',
+            '@type' => 'hydra:Collection',
+            'hydra:view' => [
+                '@id' => '/statistics/cars?page=2',
+                '@type' => 'hydra:PartialCollectionView',
             ],
         ]);
     }

@@ -20,9 +20,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ApiResource(iri="http://schema.org/Category", attributes={"esql"=true})
  * @ORM\Entity
  */
+#[ApiResource(iri: 'http://schema.org/Category', attributes: ['esql' => true])]
 class Category
 {
     /**
@@ -33,13 +33,13 @@ class Category
     /**
      * @ORM\Column(type="string", length=30)
      * @ORM\Id
-     * @ApiProperty(iri="http://schema.org/identifier", identifier=true)
      */
+    #[ApiProperty(iri: 'http://schema.org/identifier', identifier: true)]
     public string $identifier;
 
     /**
      * @ORM\OneToMany(targetEntity="Category", mappedBy="parent")
-     * @ApiProperty(readable=false)
+     * #[ApiProperty(readable: false)]
      */
     private Collection $children;
 

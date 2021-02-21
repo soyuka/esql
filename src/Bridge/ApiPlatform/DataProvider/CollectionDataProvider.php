@@ -65,10 +65,8 @@ SQL;
             }
         }
 
-        if ($this->dataPaginator->shouldPaginate($resourceClass, $operationName)) {
-            $context[DataPaginator::ESQL] = $esql;
-
-            return $this->dataPaginator->paginate($query, $resourceClass, $operationName, $parameters, $context);
+        if ($paginator = $this->dataPaginator->getPaginator($resourceClass, $operationName)) {
+            return $paginator($esql, $query, $parameters, $context);
         }
 
         $stmt = $connection->prepare($query);

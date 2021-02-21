@@ -94,7 +94,7 @@ interface ESQLInterface
      * @param object|class-string|string $objectOrClass
      * @param string|class-string|null   $mapTo
      */
-    public function __invoke($objectOrClass, ?string $mapTo = null): self;
+    public function __invoke($objectOrClass, ?string $mapTo = null, ?string $aliasTo = null): self;
 
     // /**
     //  * Get the class alias.
