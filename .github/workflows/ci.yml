@@ -108,6 +108,7 @@ jobs:
         run: tests/Fixtures/app/console cache:clear --ansi
       - run: tests/Fixtures/app/console doctrine:schema:create -v
       - name: Run PHPUnit tests
+        run: |
             vendor/bin/simple-phpunit --coverage-clover coverage.xml
             bash <(curl -s https://codecov.io/bash)
 
