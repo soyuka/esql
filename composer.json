@@ -18,7 +18,7 @@
         "symfony/http-client": "^5.2",
         "symfony/browser-kit": "^5.2",
         "phpspec/prophecy-phpunit": "^2.0",
-        "api-platform/core": "^2.6.1",
+        "api-platform/core": "^2.6.2",
         "doctrine/orm": "^2.8",
         "jane-php/automapper": "dev-next",
         "symfony/serializer": "^5.2",
