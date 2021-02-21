@@ -28,6 +28,9 @@ use Soyuka\ESQL\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * @experimental
+ */
 class DataPaginator
 {
     private ManagerRegistry $managerRegistry;

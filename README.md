@@ -27,7 +27,7 @@ $stmt->execute(['id' => 1]);
 var_dump($esql->map($stmt->fetch()));
 ```
 
-[Jump to the documentation](#documentation) or [read this blog article](https://soyuka.me/esql-alternative-to-doctrine-query-language-why/) to know more.
+[Jump to the documentation](#documentation) or [read this blog article](https://soyuka.me/esql-alternative-to-doctrine-query-language-why/) to see it in action.
 
 ## API Platform bridge
 
@@ -120,7 +120,13 @@ Note that if you used a sequence you'd need to handle that yourself.
 
 ## Documentation
 
-### With Doctrine
+- [Doctrine](#doctrine)
+- [Mapping](#mapping)
+- [Bundle configuration](#bundle-configuration)
+- [Paginator](#paginator)
+- [Examples](#examples)
+
+### Doctrine
 
 An ESQL instance offers a few methods to help you write SQL with the help of Doctrine's metadata. To ease there use inside [HEREDOC](https://www.php.net/manual/en/language.types.string.php#language.types.string.syntax.heredoc) calling `__invoke($classOrObject)` on the `ESQL` class will return an array with the following closure:
 
@@ -206,15 +212,16 @@ This way, ESQL knows to map the `Model` to the `Car->model` property. When worki
 ```php
 <?php
 
-// We will compute statistics and map car properties to the Aggregate class
-$car = $esql(Car::class, Aggregate::class);
+// Let's compute statistics and map car properties to the Aggregate class
+// The entity used is Car, mapped to Aggregate and using an SQL alias "car"
+$car = $esql(Car::class, Aggregate::class, 'car');
 // The model relation doesn't exist, let's just use the model property
 $model = $car(Model::class, 'model');
 ```
 
 The full interface is available as [ESQLInterface](./src/ESQLInterface.php).
 
-### The Mapper
+### Mapping
 
 #### Automapper
 
@@ -256,3 +263,52 @@ esql:
   api-platform:
     enabled: true
 ```
+
+### Paginator
+
+API Platform has great defaults for pagination. Using `Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator`, fetching data would look like this:
+
+```php
+<?php
+
+$esql = $this->esql->__invoke(Car::class);
+$parameters = [];
+
+$query = <<<SQL
+SELECT {$esql->columns()} FROM {$esql->table()}
+SQL;
+
+if ($paginator = $this->dataPaginator->getPaginator($resourceClass, $operationName)) {
+    return $paginator($esql, $query, $parameters, $context);
+}
+```
+
+If you want to handle the pagination yourself, we provide a way to do so:
+
+```php
+<?php
+
+$resourceClass = Car::class;
+$operationName = 'get';
+$esql = $this->esql->__invoke($resourceClass);
+['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $this->dataPaginator->getPaginationOptions($resourceClass, $operationName);
+
+$query = <<<SQL
+SELECT {$esql->columns()} FROM {$esql->table()}
+LIMIT $itemsPerPage OFFSET $firstResult
+SQL;
+
+// fetch data somehow and map
+$data = $esql->map($data);
+
+$countQuery = <<< SQL
+SELECT COUNT(1) as count FROM {$esql->table()}
+SQL;
+
+return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $count);
+```
+
+### Examples
+
+- [Aggregates](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/DataProvider/StatisticsDataProvider.php)
+- [Product with CTE](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/DataProvider/ProductDataProvider.php)
