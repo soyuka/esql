@@ -185,17 +185,6 @@ $car->parameters();
 
 This are useful to build filters, write systems or even a custom mapper.
 
-When you need to map DTOs use the class to map to:
-
-```php
-<?php
-// Assuming this does some aggregate
-// This will map the results of this query to `MyDto`
-$t = $esql(Entity::class, MyDto::class);
-// ...
-$this->dataPaginator->paginate($query, $resourceClass, $operationName, $parameters, [DataPaginator::MAP_TO => MyDto::class]);
-```
-
 ESQL works using aliases and mapping them to classes and their properties. When working on relation you'll have to use:
 
 ```php
@@ -304,6 +293,9 @@ $data = $esql->map($data);
 $countQuery = <<< SQL
 SELECT COUNT(1) as count FROM {$esql->table()}
 SQL;
+
+// get count results somehow
+$count = $countResult['count'];
 
 return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $count);
 ```

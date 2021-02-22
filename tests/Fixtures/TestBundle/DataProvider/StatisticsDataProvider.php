@@ -53,12 +53,24 @@ final class StatisticsDataProvider implements RestrictedDataProviderInterface, C
         $car = $this->esql->__invoke(Car::class, DtoCarStatistics::class, 'car');
         /** @var string */
         $groupBy = $car->columns(['sold', 'color'], $car::AS_STRING | $car::WITHOUT_ALIASES);
-        $query = <<<SQL
-        SELECT AVG(car.price) as car_totalPrice, car.sold || COALESCE(car.color, 'No color information') as car_identifier, {$car->columns(['sold', 'color'])}
-        FROM {$car->table()}
-        GROUP BY {$groupBy}
-        ORDER BY AVG(car.price) ASC
+
+        switch ($connection->getDriver()->getName()) {
+            case 'pdo_sqlsrv':
+                $query = <<<SQL
+                SELECT AVG(CAST(car.price as BIGINT)) as car_totalPrice, CONCAT(CASE WHEN car.sold = '1' THEN 'sold' ELSE 'not sold' END, COALESCE(car.color, 'No color information')) as car_identifier, {$car->columns(['sold', 'color'])}
+                FROM {$car->table()}
+                GROUP BY {$groupBy}
+                ORDER BY AVG(CAST(car.price as BIGINT)) ASC
 SQL;
+                break;
+            default:
+                $query = <<<SQL
+                SELECT AVG(car.price) as car_totalPrice, car.sold || COALESCE(car.color, 'No color information') as car_identifier, {$car->columns(['sold', 'color'])}
+                FROM {$car->table()}
+                GROUP BY {$groupBy}
+                ORDER BY AVG(car.price) ASC
+SQL;
+        }
 
         if ($paginator = $this->dataPaginator->getPaginator($resourceClass, $operationName)) {
             return $paginator($car, $query, $parameters, $context);
