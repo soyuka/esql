@@ -28,6 +28,9 @@ use Soyuka\ESQL\Exception\RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
+/**
+ * @experimental
+ */
 class DataPaginator
 {
     private ManagerRegistry $managerRegistry;
@@ -120,6 +123,7 @@ class DataPaginator
     {
         ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $paginationOptions;
 
+        $originalQuery = $query;
         $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
         switch ($driverName) {
             case 'pdo_sqlsrv':
@@ -158,7 +162,7 @@ SQL;
             $data = $esql->map($data);
         }
 
-        return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $this->count($esql, $query, $parameters, $context));
+        return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $this->count($esql, $originalQuery, $parameters, $context));
     }
 
     protected function count(ESQLInterface $esql, string $query, array $parameters = [], array $context = []): float
@@ -170,11 +174,16 @@ SQL;
             case 'pdo_sqlsrv':
             /** @var string */
             $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
-            $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
-            $query = <<<SQL
+
+            if (false !== strpos($query, 'WITH')) {
+                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
+                $query = <<<SQL
 $query
 ) AS paginated
 SQL;
+            } else {
+                $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
+            }
                 break;
             case 'pdo_pgsql':
             case 'pdo_sqlite':

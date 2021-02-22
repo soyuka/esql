@@ -30,7 +30,7 @@ Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car:
         sold: true
     car_statistics_{1..1000}:
         model: '@models*'
-        name: <carName('f')>
+        name: <carName('i')>
         price: <randomNumber()>
         # Do not use colors that could be in safeColorName above
         color: '<randomElement(["color1", "color2", "color3", "color4"])>'
