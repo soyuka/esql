@@ -17,7 +17,7 @@ api_platform:
     enable_swagger: false
     enable_swagger_ui: false
     enable_profiler: false
-    enable_docs: true # Can't generate anonymous context if false?
+    enable_docs: true # Needed for jsonld
     enable_entrypoint: false
     enable_re_doc: false
     formats:
