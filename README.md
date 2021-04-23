@@ -66,7 +66,7 @@ It's planned to add support for Eloquent or other ORM systems once the API is st
 
 ### Which Database Management Systems are supported?
 
-With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMSusing SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and Mysql.
+With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMS using SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and Mysql.
 
 ### Are there any limitations or caveats?
 
