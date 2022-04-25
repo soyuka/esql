@@ -21,6 +21,8 @@ use Soyuka\ESQL\Bridge\Symfony\Bundle\ESQLBundle;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\TestBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
@@ -41,6 +43,8 @@ class AppKernel extends Kernel
             new HautelookAliceBundle(),
             new JaneAutoMapperBundle(),
             new TestBundle(),
+            new WebProfilerBundle(),
+            new TwigBundle(),
         ];
     }
 
@@ -49,10 +53,7 @@ class AppKernel extends Kernel
         return __DIR__;
     }
 
-    /**
-     * @param \Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator|\Symfony\Component\Routing\RouteCollectionBuilder $routes
-     */
-    protected function configureRoutes($routes): void
+    protected function configureRoutes(Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator|Symfony\Component\Routing\RouteCollectionBuilder $routes): void
     {
         $routes->import(__DIR__.'/config/routing.yml');
     }
@@ -61,8 +62,9 @@ class AppKernel extends Kernel
     {
         $c->setParameter('kernel.project_dir', __DIR__);
 
-        $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Bridge/Symfony/Bundle/Resources/config/openapi.xml');
-        $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Bridge/Symfony/Bundle/Resources/config/json_schema.xml');
+        $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Symfony/Bundle/Resources/config/openapi.xml');
+        $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Symfony/Bundle/Resources/config/v3/openapi.xml');
+        $loader->load(__DIR__.'/../../../vendor/api-platform/core/src/Symfony/Bundle/Resources/config/json_schema.xml');
 
         switch ($_SERVER['ESQL_DB'] ?? null) {
             case 'postgres':

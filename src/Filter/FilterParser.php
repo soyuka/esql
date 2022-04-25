@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Filter;
 
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use JMS\Parser\AbstractParser;
 use JMS\Parser\SimpleLexer;
@@ -35,15 +36,10 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
     public const T_VALUE = 6;
     public const T_COLON = 7;
     public const T_WORD = 8;
-
-    private ESQLInterface $esql;
-    private ManagerRegistry $registry;
     private array $parameterNames = [];
 
-    public function __construct(ESQLInterface $esql, ManagerRegistry $registry)
+    public function __construct(private readonly ESQLInterface $esql, private readonly ManagerRegistry $registry)
     {
-        $this->registry = $registry;
-        $this->esql = $esql;
         parent::__construct(new SimpleLexer('/
             (and)|(or)
             | (\() | (\))
@@ -67,7 +63,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         ));
     }
 
-    public function parse($str, $context = null)
+    public function parse($str, $context = null): mixed
     {
         if (!$context) {
             throw new InvalidArgumentException('Parsing a filter without a class as second argument is not possible.');
@@ -75,7 +71,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
         $this->context = $context;
         $this->lexer->setInput($str);
-        $driverName = $this->registry->getConnection()->getDriver()->getName();
+        $driverName = $this->registry->getConnection()->getDriver()->getDatabasePlatform()::class;
         $esql = $this->esql->__invoke($context);
 
         $result = '';
@@ -141,7 +137,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                         throw new InvalidArgumentException("The operator '$sqlOperator' is not supported.");
                     }
 
-                    if (0 === strpos($sqlOperator, 'IS')) {
+                    if (str_starts_with($sqlOperator, 'IS')) {
                         if (!\in_array($value, [true, false, null], true)) {
                             throw new InvalidArgumentException('IS only works with true, false or null.');
                         }
@@ -149,7 +145,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                         $result .= "$columnValue $sqlOperator ".(true === $value ? 'TRUE' : (false === $value ? 'FALSE' : 'NULL'));
                     } else {
                         $result .= "$columnValue $sqlOperator :$uniqueParameterName";
-                        if (false !== strpos($sqlOperator, 'LIKE')) {
+                        if (str_contains((string) $sqlOperator, 'LIKE')) {
                             $value = str_replace('*', '%', $value);
                         }
 
@@ -177,35 +173,24 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
     private function operatorToSQLCondition(string $condition): string
     {
         $negation = false;
-        if (0 === strpos($condition, 'not.')) {
+        if (str_starts_with($condition, 'not.')) {
             $condition = substr($condition, 4);
             $negation = true;
         }
 
-        switch ($condition) {
-            case 'eq':
-                return $negation ? '!=' : '=';
-            case 'gt':
-                return $negation ? '<' : '>';
-            case 'gte':
-                return $negation ? '<=' : '>=';
-            case 'lt':
-                return $negation ? '>' : '<';
-            case 'lte':
-                return $negation ? '>=' : '<=';
-            case 'neq':
-                return $negation ? '=' : '!=';
-            case 'ilike':
-                return $negation ? 'NOT ILIKE' : 'ILIKE';
-            case 'like':
-                return $negation ? 'NOT LIKE' : 'LIKE';
-            case 'is':
-                return $negation ? 'IS NOT' : 'IS';
-            case 'in':
-                return $negation ? 'NOT IN' : 'IN';
-        }
-
-        throw new InvalidArgumentException($condition.' is not supported.');
+        return match ($condition) {
+            'eq' => $negation ? '!=' : '=',
+            'gt' => $negation ? '<' : '>',
+            'gte' => $negation ? '<=' : '>=',
+            'lt' => $negation ? '>' : '<',
+            'lte' => $negation ? '>=' : '<=',
+            'neq' => $negation ? '=' : '!=',
+            'ilike' => $negation ? 'NOT ILIKE' : 'ILIKE',
+            'like' => $negation ? 'NOT LIKE' : 'LIKE',
+            'is' => $negation ? 'IS NOT' : 'IS',
+            'in' => $negation ? 'NOT IN' : 'IN',
+            default => throw new InvalidArgumentException($condition.' is not supported.'),
+        };
     }
 
     private function uniqueParameterName(string $parameterName): string
@@ -238,7 +223,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
             return [self::T_CLOSE, ')'];
         }
 
-        if (1 === preg_match('~^(not\.)?(eq|gt|gte|lte|lt|neq|like|ilike|in|is)$~', $value)) {
+        if (1 === preg_match('~^(not\.)?(eq|gt|gte|lte|lt|neq|like|ilike|in|is)$~', (string) $value)) {
             return [self::T_OPERATOR, $this->operatorToSQLCondition($value)];
         }
 
@@ -268,11 +253,9 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
     private function supportsSQLClause(string $sqlClause, string $driver): bool
     {
-        switch ($driver) {
-          case 'pdo_sqlite':
-            return 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true;
-      }
-
-        return true;
+        return match ($driver) {
+            SqlitePlatform::class => 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true,
+            default => true,
+        };
     }
 }

@@ -11,12 +11,15 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Bridge\ApiPlatform\DataProvider;
+namespace Soyuka\ESQL\Bridge\ApiPlatform\State;
 
-use ApiPlatform\Core\DataProvider\PaginationOptions;
-use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
-use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\Pagination\PaginationOptions;
+use ApiPlatform\State\Pagination\PartialPaginatorInterface as ApiPlatformPartialPaginatorInterface;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use PhpMyAdmin\SqlParser\Context;
 use PhpMyAdmin\SqlParser\Parser;
@@ -33,52 +36,28 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class DataPaginator
 {
-    private ManagerRegistry $managerRegistry;
-    private RequestStack $requestStack;
-    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
-    private ESQLMapperInterface $mapper;
-    private PaginationOptions $paginationOptions;
-    private ?int $itemsPerPage;
-    private ?int $maximumItemsPerPage;
-    private bool $partialPaginationEnabled;
-    private ?string $clientPartialPagination;
-    private string $partialPaginationParameterName;
-    public const REGEX_LAST_SELECT = '~SELECT(?![^(]*\))~i';
-    public const ORDER_BY = 'esql_order_by';
+    final public const REGEX_LAST_SELECT = '~SELECT(?![^(]*\))~i';
+    final public const ORDER_BY = 'esql_order_by';
 
-    public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ResourceMetadataFactoryInterface $resourceMetadataFactory, ESQLMapperInterface $mapper, PaginationOptions $paginationOptions, ?int $itemsPerPage = 30, ?int $maximumItemsPerPage = null, bool $partialPaginationEnabled = false, ?string $clientPartialPagination = null, string $partialPaginationParameterName = 'partial')
+    public function __construct(private readonly RequestStack $requestStack, private readonly ManagerRegistry $managerRegistry, private readonly ResourceMetadataFactoryInterface $resourceMetadataFactory, private readonly ESQLMapperInterface $mapper, private readonly PaginationOptions $paginationOptions, private readonly ?int $itemsPerPage = 30, private readonly ?int $maximumItemsPerPage = null, private readonly bool $partialPaginationEnabled = false, private readonly ?string $clientPartialPagination = null, private readonly string $partialPaginationParameterName = 'partial')
     {
-        $this->requestStack = $requestStack;
-        $this->managerRegistry = $managerRegistry;
-        $this->resourceMetadataFactory = $resourceMetadataFactory;
-        $this->mapper = $mapper;
-        $this->paginationOptions = $paginationOptions;
-        $this->itemsPerPage = $itemsPerPage;
-        $this->maximumItemsPerPage = $maximumItemsPerPage;
-        $this->partialPaginationEnabled = $partialPaginationEnabled;
-        $this->clientPartialPagination = $clientPartialPagination;
-        $this->partialPaginationParameterName = $partialPaginationParameterName;
     }
 
-    public function getPaginator(string $resourceClass, ?string $operationName = null): ?\Closure
+    public function getPaginator(Operation $operation): ?\Closure
     {
         $request = $this->requestStack->getCurrentRequest();
-        $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
 
-        if (null !== $request && ($this->isPaginationEnabled($request, $resourceMetadata, $operationName) || $this->isPartialPaginationEnabled(
+        if (null !== $request && ($this->isPaginationEnabled($request, $operation) || $this->isPartialPaginationEnabled(
             $request,
-            $resourceMetadata,
-            $operationName
+            $operation
         ))) {
-            return function (ESQLInterface $esql, string $query, array $parameters, array $context = []) use ($resourceClass, $operationName) {
-                return $this->paginate($esql, $query, $parameters, $this->getPaginationOptions($resourceClass, $operationName), $context);
-            };
+            return fn (ESQLInterface $esql, string $query, array $parameters, array $context = []) => $this->paginate($esql, $query, $parameters, $this->getPaginationOptions($operation), $context);
         }
 
         return null;
     }
 
-    public function getPaginationOptions(string $resourceClass, ?string $operationName = null): array
+    public function getPaginationOptions(Operation $operation): array
     {
         $request = $this->requestStack->getCurrentRequest();
 
@@ -86,17 +65,15 @@ class DataPaginator
             throw new RuntimeException('Not in a request');
         }
 
-        $resourceMetadata = $this->resourceMetadataFactory->create($resourceClass);
         $isPartialEnabled = $this->isPartialPaginationEnabled(
             $request,
-            $resourceMetadata,
-            $operationName
+            $operation
         );
 
-        $itemsPerPage = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_items_per_page', $this->itemsPerPage, true);
-        if ($resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_client_items_per_page', $this->paginationOptions->getClientItemsPerPage(), true)) {
-            $maxItemsPerPage = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_maximum_items_per_page', $this->maximumItemsPerPage, true);
-            $itemsPerPage = (int) $this->getPaginationParameter($request, $this->paginationOptions->getItemsPerPageParameterName() ?: 'itemsPerPage', $itemsPerPage);
+        $itemsPerPage = $operation->getPaginationItemsPerPage() ?? $this->itemsPerPage ?? 30.0;
+        if ($operation->getPaginationClientItemsPerPage() ?? $this->paginationOptions->getClientItemsPerPage()) {
+            $maxItemsPerPage = $operation->getPaginationMaximumItemsPerPage() ?? $this->maximumItemsPerPage;
+            $itemsPerPage = (int) $this->getPaginationParameter($request, $this->paginationOptions->getItemsPerPageParameterName(), $itemsPerPage);
             $itemsPerPage = (null !== $maxItemsPerPage && $itemsPerPage >= $maxItemsPerPage ? $maxItemsPerPage : $itemsPerPage);
         }
 
@@ -119,14 +96,14 @@ class DataPaginator
         return ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled];
     }
 
-    protected function paginate(ESQLInterface $esql, string $query, array $parameters, array $paginationOptions, array $context = []): PartialPaginatorInterface
+    protected function paginate(ESQLInterface $esql, string $query, array $parameters, array $paginationOptions, array $context = []): ApiPlatformPartialPaginatorInterface
     {
         ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $paginationOptions;
 
         $originalQuery = $query;
-        $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
+        $driverName = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform()::class;
         switch ($driverName) {
-            case 'pdo_sqlsrv':
+            case SQLServerPlatform::class:
                 Context::setMode('NO_ENCLOSING_QUOTES');
                 $parser = new Parser($query);
                 /** @var string */
@@ -155,8 +132,8 @@ SQL;
 
         $connection = $this->managerRegistry->getConnection();
         $stmt = $connection->prepare($query);
-        $stmt->execute($parameters);
-        $data = $stmt->fetchAll();
+        $result = $stmt->executeQuery($parameters);
+        $data = $result->fetchAllAssociative();
 
         if ($data) {
             $data = $esql->map($data);
@@ -168,14 +145,14 @@ SQL;
     protected function count(ESQLInterface $esql, string $query, array $parameters = [], array $context = []): float
     {
         $connection = $this->managerRegistry->getConnection();
-        $driverName = $this->managerRegistry->getConnection()->getDriver()->getName();
+        $driverName = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform()::class;
 
         switch ($driverName) {
-            case 'pdo_sqlsrv':
+            case SQLServerPlatform::class:
             /** @var string */
             $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
 
-            if (false !== strpos($query, 'WITH')) {
+            if (str_contains($query, 'WITH')) {
                 $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
                 $query = <<<SQL
 $query
@@ -185,29 +162,30 @@ SQL;
                 $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
             }
                 break;
-            case 'pdo_pgsql':
-            case 'pdo_sqlite':
+            case PostgreSQLPlatform::class:
+            case SqlitePlatform::class:
                 $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
                 break;
         }
 
         $stmt = $connection->prepare($query);
-        $stmt->execute($parameters);
-        ['_esql_count' => $totalItems] = $stmt->fetch();
+        $result = $stmt->executeQuery($parameters);
+
+        ['_esql_count' => $totalItems] = $result->fetchAssociative();
 
         return (float) $totalItems;
     }
 
-    protected function isPartialPaginationEnabled(Request $request = null, ResourceMetadata $resourceMetadata = null, string $operationName = null): bool
+    protected function isPartialPaginationEnabled(Request $request = null, Operation $operation = null): bool
     {
         $enabled = $this->partialPaginationEnabled;
         $clientEnabled = $this->clientPartialPagination;
 
-        if ($resourceMetadata) {
-            $enabled = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_partial', $enabled, true);
+        if ($operation) {
+            $enabled = $operation->getPaginationPartial() ?? $enabled;
 
             if ($request) {
-                $clientEnabled = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_client_partial', $clientEnabled, true);
+                $clientEnabled = $operation->getPaginationClientPartial() ?? $clientEnabled;
             }
         }
 
@@ -218,10 +196,10 @@ SQL;
         return $enabled;
     }
 
-    protected function isPaginationEnabled(Request $request, ResourceMetadata $resourceMetadata, string $operationName = null): bool
+    protected function isPaginationEnabled(Request $request, Operation $operation): bool
     {
-        $enabled = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_enabled', $this->paginationOptions->isPaginationEnabled(), true);
-        $clientEnabled = $resourceMetadata->getCollectionOperationAttribute($operationName, 'pagination_client_enabled', $this->paginationOptions->getPaginationClientEnabled(), true);
+        $enabled = $operation->getPaginationEnabled() ?? $this->paginationOptions->isPaginationEnabled();
+        $clientEnabled = $operation->getPaginationClientEnabled() ?? $this->paginationOptions->getPaginationClientEnabled();
 
         if ($clientEnabled) {
             $enabled = filter_var($this->getPaginationParameter($request, $this->paginationOptions->getPaginationClientEnabledParameterName(), $enabled), \FILTER_VALIDATE_BOOLEAN);

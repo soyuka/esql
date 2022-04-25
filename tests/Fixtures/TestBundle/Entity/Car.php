@@ -13,47 +13,30 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
+use Soyuka\ESQL\Bridge\ApiPlatform\State\Provider;
 
-/**
- * @ORM\Entity
- */
 #[ApiResource(
-    attributes: ['order' => ['name' => 'ASC', 'id' => 'ASC'], 'esql' => true]
+    order: ['name' => 'ASC', 'id' => 'ASC'],
+    provider: Provider::class
 )]
+#[ORM\Entity]
 class Car
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     public int $id;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     public string $name;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     public ?string $color = null;
-
-    /**
-     * @ORM\Column(type="integer", nullable=false)
-     */
+    #[ORM\Column(type: 'integer', nullable: false)]
     public int $price = 0;
-
-    /**
-     * @ORM\Column(type="boolean")
-     */
+    #[ORM\Column(type: 'boolean')]
     public bool $sold = false;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=Model::class, inversedBy="cars")
-     * @ORM\JoinColumn(nullable=false)
-     */
+    #[ORM\ManyToOne(targetEntity: Model::class, inversedBy: 'cars')]
+    #[ORM\JoinColumn(nullable: false)]
     public ?Model $model = null;
 }

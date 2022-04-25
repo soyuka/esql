@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
+
 final class SortExtensionTest extends AbstractTest
 {
     public function testGetCollectionSortByName(): void
@@ -38,7 +40,7 @@ final class SortExtensionTest extends AbstractTest
         $container = $kernel->getContainer();
         $registry = $container->get('doctrine');
 
-        if (\in_array($registry->getConnection()->getDriver()->getName(), ['pdo_sqlsrv'], true)) {
+        if ($registry->getConnection()->getDriver()->getDatabasePlatform() instanceof SQLServerPlatform) {
             $this->markTestSkipped();
         }
 

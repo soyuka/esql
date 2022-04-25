@@ -13,19 +13,15 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL;
 
-final class ESQLAlias implements ESQLAliasInterface
+final class ESQLAlias implements ESQLAliasInterface, \Stringable
 {
-    private string $alias;
-    private string $normalized;
-    private ?ESQLAliasInterface $parent;
+    private readonly string $normalized;
     /** @var ESQLAliasInterface[] */
-    private $aliases = [];
+    private array $aliases = [];
 
-    public function __construct(string $alias, ?ESQLAliasInterface $parent = null)
+    public function __construct(private readonly string $alias, private readonly ?ESQLAliasInterface $parent = null)
     {
-        $this->alias = $alias;
         $this->normalized = str_replace('_', '', strtolower($alias));
-        $this->parent = $parent;
     }
 
     /**

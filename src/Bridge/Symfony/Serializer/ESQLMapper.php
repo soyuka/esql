@@ -21,11 +21,8 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class ESQLMapper extends Base implements ESQLMapperInterface
 {
-    private DenormalizerInterface $normalizer;
-
-    public function __construct(DenormalizerInterface $normalizer)
+    public function __construct(private readonly DenormalizerInterface $normalizer)
     {
-        $this->normalizer = $normalizer;
     }
 
     public function map(array $data, string $class, ESQLAliasInterface $a)

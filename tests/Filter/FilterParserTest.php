@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Filter;
 
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Soyuka\ESQL\Bridge\Doctrine\ESQL;
 use Soyuka\ESQL\Filter\FilterParser;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Car;
@@ -77,7 +78,7 @@ class FilterParserTest extends KernelTestCase
         self::bootKernel();
         $container = self::$kernel->getContainer();
         $registry = $container->get('doctrine');
-        if ('pdo_sqlite' === $registry->getConnection()->getDriver()->getName()) {
+        if ($registry->getConnection()->getDriver()->getDatabasePlatform() instanceof SqlitePlatform) {
             $this->markTestSkipped();
         }
 

@@ -15,9 +15,10 @@ namespace App\Tests\Api;
 
 use ApiPlatform\Core\Bridge\Symfony\Bundle\Test\ApiTestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 /**
- * Usually we use the RHautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait but I needed to override `purgeWithTruncate` as there's
+ * Usually we use the Hautelook\AliceBundle\PhpUnit\RefreshDatabaseTrait but I needed to override `purgeWithTruncate` as there's
  * an issue with TRUNCATE and FOREIGN KEYs on SQL Server see https://github.com/doctrine/data-fixtures/issues/113#issuecomment-144950542.
  */
 abstract class AbstractTest extends ApiTestCase
@@ -73,7 +74,7 @@ abstract class AbstractTest extends ApiTestCase
 
     protected static $dbPopulated = false;
 
-    protected static function bootKernel(array $options = [])
+    protected static function bootKernel(array $options = []): KernelInterface
     {
         $kernel = parent::bootKernel($options);
 

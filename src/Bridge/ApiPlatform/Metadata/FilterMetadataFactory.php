@@ -18,11 +18,8 @@ use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 
 final class FilterMetadataFactory implements ResourceMetadataFactoryInterface
 {
-    private ResourceMetadataFactoryInterface $decorated;
-
-    public function __construct(ResourceMetadataFactoryInterface $decorated)
+    public function __construct(private readonly ResourceMetadataFactoryInterface $decorated)
     {
-        $this->decorated = $decorated;
     }
 
     public function create(string $resourceClass): ResourceMetadata

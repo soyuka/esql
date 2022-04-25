@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         php:
-          - '8.0'
+          - '8.1'
       fail-fast: false
     env:
       PHP_CS_FIXER_FUTURE_MODE: '1'
@@ -40,7 +40,7 @@ jobs:
     strategy:
       matrix:
         php:
-          - '8.0'
+          - '8.1'
       fail-fast: false
     steps:
       - name: Checkout
@@ -63,9 +63,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
       - name: Set Composer platform config
-        if: (startsWith(matrix.php, '8.0'))
-        run: |
-            composer config platform.php 7.4.99
       - name: Update project dependencies
         run: composer update --no-interaction --no-progress --ansi
       - name: Run psalm analysis
@@ -78,7 +75,7 @@ jobs:
     strategy:
       matrix:
         php:
-          - '8.0'
+          - '8.1'
       fail-fast: false
     steps:
       - name: Checkout
@@ -101,9 +98,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
       - name: Set Composer platform config
-        if: (startsWith(matrix.php, '8.0'))
-        run: |
-            composer config platform.php 7.4.99
       - name: Update project dependencies
         run: composer update --no-interaction --no-progress --ansi
       - name: Install PHPUnit
@@ -123,7 +117,7 @@ jobs:
     strategy:
       matrix:
         php:
-          - '8.0'
+          - '8.1'
       fail-fast: false
     env:
       ESQL_DB: postgres
@@ -156,9 +150,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
       - name: Set Composer platform config
-        if: (startsWith(matrix.php, '8.0'))
-        run: |
-            composer config platform.php 7.4.99
       - name: Update project dependencies
         run: composer update --no-interaction --no-progress --ansi
       - name: Install PHPUnit
@@ -178,7 +169,7 @@ jobs:
     strategy:
       matrix:
         php:
-          - '8.0'
+          - '8.1'
       fail-fast: false
     env:
       ESQL_DB: sqlsrv
@@ -217,9 +208,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
       - name: Set Composer platform config
-        if: (startsWith(matrix.php, '8.0'))
-        run: |
-            composer config platform.php 7.4.99
       - name: Update project dependencies
         run: composer update --no-interaction --no-progress --ansi
       - name: Install PHPUnit

@@ -1,8 +1,8 @@
 framework:
+    profiler:
+        enabled: true
     secret:                           's3cr3t'
     test:                              ~
-    session:
-        storage_id:                    'session.storage.mock_file'
     router:
         utf8:                           true
 
@@ -14,11 +14,12 @@ hautelook_alice:
 api_platform:
     title: 'ESQL test api'
     description: 'ESQL test api'
+    metadata_backward_compatibility_layer: false
     enable_swagger: false
     enable_swagger_ui: false
     enable_profiler: false
     enable_docs: true # Needed for jsonld
-    enable_entrypoint: false
+    enable_entrypoint: true
     enable_re_doc: false
     formats:
         jsonld:                        ['application/ld+json']
@@ -38,6 +39,9 @@ api_platform:
         order:                         'ASC'
         pagination:
             client_partial: true
+    resource_class_directories:
+        - '%kernel.project_dir%/../TestBundle/Model'
+        - '%kernel.project_dir%/../TestBundle/Entity'
     defaults:
         pagination_client_enabled:            true
         pagination_client_items_per_page:     true
@@ -62,11 +66,11 @@ services:
     Soyuka\ESQL\Tests\Fixtures\TestBundle\Faker\Provider\CarProvider: ~
     Soyuka\ESQL\Tests\Fixtures\TestBundle\Extension\CategoryFilterExtension:
         tags: ['esql.collection_extension']
-    Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider\ProductDataProvider:
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\State\ProductProvider:
         tags: 
-         - {name: 'api_platform.collection_data_provider', priority: 20}
+         - {name: 'api_platform.state_provider'}
         arguments: 
-          $decorated: '@esql.api_platform.default.collection_data_provider'
-    Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider\StatisticsDataProvider:
+          $decorated: '@esql.api_platform.default.provider'
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\State\StatisticsProvider:
         tags: 
-         - {name: 'api_platform.collection_data_provider', priority: 20}
+         - {name: 'api_platform.state_provider'}

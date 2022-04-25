@@ -12,12 +12,11 @@ file that was distributed with this source code.
 HEADER;
 
 $finder = PhpCsFixer\Finder::create()
-  ->in(__DIR__)
 	->exclude([
         'tests/Fixtures/app/var',
     ]);
 
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
         '@DoctrineAnnotation' => true,

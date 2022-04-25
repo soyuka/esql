@@ -24,18 +24,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 final class FilterExtension implements QueryCollectionExtensionInterface
 {
-    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
-    private RequestStack $requestStack;
-    private ESQLInterface $esql;
-    private FilterParserInterface $filterParser;
     public const REGEX_LAST_SELECT = '~WHERE(?!.*WHERE)~is';
 
-    public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, RequestStack $requestStack, ESQLInterface $esql, FilterParserInterface $filterParser)
+    public function __construct(private readonly ResourceMetadataFactoryInterface $resourceMetadataFactory, private readonly RequestStack $requestStack, private readonly ESQLInterface $esql, private readonly FilterParserInterface $filterParser)
     {
-        $this->resourceMetadataFactory = $resourceMetadataFactory;
-        $this->requestStack = $requestStack;
-        $this->esql = $esql;
-        $this->filterParser = $filterParser;
     }
 
     public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array
