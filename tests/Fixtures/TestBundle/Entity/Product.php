@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiProperty;
+use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\State\ProductProvider;
@@ -32,10 +32,10 @@ class Product
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UlidGenerator::class)]
     private Ulid $id;
-    #[ApiProperty(iri: 'http://schema.org/name')]
+    #[ApiProperty(types: ['http://schema.org/name'])]
     #[ORM\Column(type: 'string', length: 255)]
     public string $name;
-    #[ApiProperty(iri: 'http://schema.org/description')]
+    #[ApiProperty(types: ['http://schema.org/description'])]
     #[ORM\Column(type: 'string', length: 255)]
     public string $description;
     /**
@@ -46,9 +46,9 @@ class Product
     #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'identifier')]
     public $categoryRelation;
     // this property is not typed on purpose
-    #[ApiProperty(iri: 'http://schema.org/category')]
+    #[ApiProperty(types: ['http://schema.org/category'])]
     private string $category = '';
-    #[ApiProperty(iri: 'http://schema.org/gtin')]
+    #[ApiProperty(types: ['http://schema.org/gtin'])]
     #[ORM\Column(type: 'string', length: 14)]
     public string $gtin;
 
