@@ -37,8 +37,6 @@ api_platform:
     collection:
         order_parameter_name:          'order'
         order:                         'ASC'
-        pagination:
-            client_partial: true
     resource_class_directories:
         - '%kernel.project_dir%/../TestBundle/Model'
         - '%kernel.project_dir%/../TestBundle/Entity'
@@ -74,3 +72,6 @@ services:
     Soyuka\ESQL\Tests\Fixtures\TestBundle\State\StatisticsProvider:
         tags: 
          - {name: 'api_platform.state_provider'}
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\AutoMapper\MonetaryAmountTransformerFactory: ~
+    Soyuka\ESQL\Tests\Fixtures\TestBundle\AutoMapper\MonetaryAmountTransformer: ~
+

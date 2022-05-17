@@ -18,15 +18,11 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\State\StatisticsProvider;
 
-#[Get(
-    uriTemplate: '/statistics/cars/{identifier}.{_format}',
-    output: false,
-    status: 404
-)]
 #[GetCollection(
     uriTemplate: '/statistics/cars.{_format}',
     provider: StatisticsProvider::class
 )]
+#[Get(uriTemplate: '/statistics/cars/{identifier}.{_format}', output: false)]
 class CarStatistics
 {
     #[ApiProperty(identifier: true)]
@@ -36,19 +32,8 @@ class CarStatistics
     public ?string $color = null;
 
     #[ApiProperty(
-        types: ['http://schema.org/MonetaryAmount']
+        types: ['http://schema.org/MonetaryAmount'],
+        iri: false
     )]
-    private MonetaryAmount $totalPrice;
-
-    public function setTotalPrice(float $value = 0.0): self
-    {
-        $this->totalPrice = new MonetaryAmount($value);
-
-        return $this;
-    }
-
-    public function getTotalPrice(): MonetaryAmount
-    {
-        return $this->totalPrice;
-    }
+    public MonetaryAmount $totalPrice;
 }

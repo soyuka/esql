@@ -38,13 +38,10 @@ class Product
     #[ApiProperty(types: ['http://schema.org/description'])]
     #[ORM\Column(type: 'string', length: 255)]
     public string $description;
-    /**
-     * @var Category
-     */
     #[ApiProperty(readable: false)]
     #[ORM\ManyToOne(targetEntity: Category::class)]
     #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'identifier')]
-    public $categoryRelation;
+    public Category $categoryRelation;
     // this property is not typed on purpose
     #[ApiProperty(types: ['http://schema.org/category'])]
     private string $category = '';

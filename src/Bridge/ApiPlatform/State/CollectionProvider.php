@@ -19,6 +19,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Soyuka\ESQL\ESQLInterface;
+use Soyuka\ESQL\Exception\RuntimeException;
 
 final class CollectionProvider implements ProviderInterface
 {
@@ -35,7 +36,7 @@ final class CollectionProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         $connection = $this->managerRegistry->getConnection();
-        $esql = $this->esql->__invoke($operation->getClass());
+        $esql = $this->esql->__invoke($operation->getClass() ?? throw new RuntimeException(sprintf('No class found for operation "%s".', $operation->getName() ?? '')));
 
         $query = <<<SQL
         SELECT {$esql->columns()} FROM {$esql->table()}

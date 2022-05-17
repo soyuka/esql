@@ -39,7 +39,7 @@ class DataPaginator
     final public const REGEX_LAST_SELECT = '~SELECT(?![^(]*\))~i';
     final public const ORDER_BY = 'esql_order_by';
 
-    public function __construct(private readonly RequestStack $requestStack, private readonly ManagerRegistry $managerRegistry, private readonly ResourceMetadataFactoryInterface $resourceMetadataFactory, private readonly ESQLMapperInterface $mapper, private readonly PaginationOptions $paginationOptions, private readonly ?int $itemsPerPage = 30, private readonly ?int $maximumItemsPerPage = null, private readonly bool $partialPaginationEnabled = false, private readonly ?string $clientPartialPagination = null, private readonly string $partialPaginationParameterName = 'partial')
+    public function __construct(private readonly RequestStack $requestStack, private readonly ManagerRegistry $managerRegistry, private readonly ResourceMetadataFactoryInterface $resourceMetadataFactory, private readonly ESQLMapperInterface $mapper, private readonly PaginationOptions $paginationOptions, private readonly ?int $itemsPerPage = 30, private readonly ?int $maximumItemsPerPage = null, private readonly bool $partialPaginationEnabled = false, private readonly ?bool $clientPartialPagination = null, private readonly string $partialPaginationParameterName = 'partial')
     {
     }
 

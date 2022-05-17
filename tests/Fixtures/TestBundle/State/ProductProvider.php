@@ -63,7 +63,7 @@ SELECT {$category->columns()} FROM descendants {$category->alias()}
 SQL;
 
         $stmt = $connection->executeQuery($query, $categoryParameter ? ['category' => $categoryParameter] : []);
-        $data = $stmt->fetchAll();
+        $data = $stmt->fetchAllAssociative();
         $categories = $category->map($data);
 
         foreach ($categories as $category) {
