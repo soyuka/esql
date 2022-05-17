@@ -85,19 +85,18 @@ final class SortExtension implements QueryCollectionExtensionInterface
 
     private function getOrderClause(string $column, string $direction, ?string $nulls): iterable
     {
-        switch ($this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform()::class) {
-            case PostgreSQLPlatform::class:
-                yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
-                break;
-            case SqlitePlatform::class:
-                if ($nulls) {
-                    yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
-                }
+        $driver = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform();
 
-                yield "{$column} {$direction}";
-                break;
-            default:
-                yield "{$column} {$direction}";
+        if ($driver instanceof PostgreSQLPlatform) {
+            yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
+        } elseif ($driver instanceof SqlitePlatform) {
+            if ($nulls) {
+                yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
+            }
+
+            yield "{$column} {$direction}";
+        } else {
+            yield "{$column} {$direction}";
         }
     }
 

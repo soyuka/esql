@@ -28,7 +28,7 @@ Run a container with postgres (and the postgis extension, why not):
 ```
 docker run -p '5432:5432' --name postgres-esql -e POSTGRES_DB=esql_test -e POSTGRES_PASSWORD=password -e POSTGRES_USER=esql postgis/postgis:12-3.0-alpine
 ESQL_DB=postgres tests/Fixtures/app/console cache:clear
-ESQL_DB=postgres d:s:c # doctrine:schema:create
+ESQL_DB=postgres tests/Fixtures/app/console d:s:c # doctrine:schema:create
 ESQL_DB=postgres vendor/bin/phpunit --stop-on-failure
 ```
 

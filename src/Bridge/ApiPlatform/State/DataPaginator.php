@@ -17,8 +17,6 @@ use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\Pagination\PaginationOptions;
 use ApiPlatform\State\Pagination\PartialPaginatorInterface as ApiPlatformPartialPaginatorInterface;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use PhpMyAdmin\SqlParser\Context;
@@ -145,28 +143,12 @@ SQL;
     protected function count(ESQLInterface $esql, string $query, array $parameters = [], array $context = []): float
     {
         $connection = $this->managerRegistry->getConnection();
-        $driverName = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform()::class;
+        $driver = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform();
 
-        switch ($driverName) {
-            case SQLServerPlatform::class:
-            /** @var string */
-            $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
-
-            if (str_contains($query, 'WITH')) {
-                $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
-                $query = <<<SQL
-$query
-) AS paginated
-SQL;
-            } else {
-                $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
-            }
-                break;
-            case PostgreSQLPlatform::class:
-            case SqlitePlatform::class:
-                $query = preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
-                break;
-        }
+        $query = match ($driver) {
+            $driver instanceof SQLServerPlatform => $this->getSQLServerCountQuery($esql, $query, $context),
+            default => preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1)
+        };
 
         $stmt = $connection->prepare($query);
         $result = $stmt->executeQuery($parameters);
@@ -174,6 +156,23 @@ SQL;
         ['_esql_count' => $totalItems] = $result->fetchAssociative();
 
         return (float) $totalItems;
+    }
+
+    private function getSQLServerCountQuery(ESQLInterface $esql, string $query, array $context = []): string
+    {
+        /** @var string */
+        $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+
+        if (str_contains($query, 'WITH')) {
+            $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT MAX(RowNumber) as _esql_count FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
+
+            return <<<SQL
+$query
+) AS paginated
+SQL;
+        }
+
+        return preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1);
     }
 
     protected function isPartialPaginationEnabled(Request $request = null, Operation $operation = null): bool

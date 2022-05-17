@@ -71,7 +71,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
 
         $this->context = $context;
         $this->lexer->setInput($str);
-        $driverName = $this->registry->getConnection()->getDriver()->getDatabasePlatform()::class;
+        $driver = $this->registry->getConnection()->getDriver()->getDatabasePlatform();
         $esql = $this->esql->__invoke($context);
 
         $result = '';
@@ -133,7 +133,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                     }
 
                     $value = $this->match(self::T_VALUE);
-                    if (!$this->supportsSQLClause($sqlOperator, $driverName)) {
+                    if (!$this->supportsSQLClause($sqlOperator, $driver)) {
                         throw new InvalidArgumentException("The operator '$sqlOperator' is not supported.");
                     }
 
@@ -251,10 +251,10 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
         return [self::T_UNKNOWN, $value];
     }
 
-    private function supportsSQLClause(string $sqlClause, string $driver): bool
+    private function supportsSQLClause(string $sqlClause, mixed $driver): bool
     {
         return match ($driver) {
-            SqlitePlatform::class => 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true,
+            $driver instanceof SqlitePlatform => 'ILIKE' === $sqlClause || 'IS' === $sqlClause ? false : true,
             default => true,
         };
     }
