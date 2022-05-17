@@ -25,7 +25,7 @@ final class Configuration implements ConfigurationInterface
     /**
      * @psalm-suppress PossiblyUndefinedMethod
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('esql');
 

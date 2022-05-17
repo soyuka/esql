@@ -12,6 +12,7 @@ file that was distributed with this source code.
 HEADER;
 
 $finder = PhpCsFixer\Finder::create()
+    ->in(__DIR__)
 	->exclude([
         'tests/Fixtures/app/var',
     ]);

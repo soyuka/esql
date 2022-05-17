@@ -145,7 +145,7 @@ final class FilterParser extends AbstractParser implements FilterParserInterface
                         $result .= "$columnValue $sqlOperator ".(true === $value ? 'TRUE' : (false === $value ? 'FALSE' : 'NULL'));
                     } else {
                         $result .= "$columnValue $sqlOperator :$uniqueParameterName";
-                        if (str_contains((string) $sqlOperator, 'LIKE')) {
+                        if (str_contains($sqlOperator, 'LIKE')) {
                             $value = str_replace('*', '%', $value);
                         }
 

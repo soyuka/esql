@@ -50,7 +50,7 @@ final class FilterExtension implements QueryCollectionExtensionInterface
         }
 
         if (null !== $and = $request->query->get('and')) {
-            $filterQuery = $propFilters ? 'and'.substr($and, 0, -1).','.implode(',', $propFilters).')' : "and$and";
+            $filterQuery = $propFilters ? 'and'.substr((string) $and, 0, -1).','.implode(',', $propFilters).')' : "and$and";
         } elseif ($propFilters) {
             $filterQuery = 'and('.implode(',', $propFilters).')';
         }

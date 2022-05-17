@@ -173,6 +173,7 @@ final class ESQL extends Base
             throw new RuntimeException('No manager for class '.$class);
         }
 
+        /** @var class-string $class */
         $classMetadata = $manager->getClassMetadata($class);
         if (!$classMetadata instanceof ClassMetadataInfo) {
             throw new RuntimeException('No class metadata for class '.$class);

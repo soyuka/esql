@@ -34,8 +34,8 @@ final class ProductProvider implements ProviderInterface
 
     private function getCategories(): array
     {
+        /** @var array|string */
         $categoryParameter = null === ($request = $this->requestStack->getCurrentRequest()) ? null : $request->query->get('category');
-        /** @psalm-suppress DocblockTypeContradiction */
         if (\is_array($categoryParameter)) {
             throw new BadRequestHttpException();
         }
