@@ -37,17 +37,19 @@ This package comes with an API Platform bridge that supports filters and paginat
 ```php
 <?php
 
-use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Metadata\ApiResource;
+use Soyuka\ESQL\Bridge\ApiPlatform\State\Provider;
+use Soyuka\ESQL\Bridge\ApiPlatform\State\Processor;
 
 /**
- * @ApiResource(attributes={"esql"=true})
+ * #[ApiResource(provider: Provider::class, processor: Processor::class)]
  */
  class Car {}
 ```
 
 This will automatically enable the use of:
-  - a `CollectionDataProvider` using raw SQL. 
-  - an `ItemDataProvider` using raw SQL. 
+  - a `CollectionProvider` using raw SQL. 
+  - an `ItemProvider` using raw SQL. 
   - compose-able filters built using [Postgrest](https://postgrest.org/en/v7.0.0/api.html#horizontal-filtering-rows) specification
   - a powerful sort extension also following [Postgrest](https://postgrest.org/en/v7.0.0/api.html#ordering) specification
   - our own `DataPaginator` that you can extend to your will
@@ -66,7 +68,7 @@ It's planned to add support for Eloquent or other ORM systems once the API is st
 
 ### Which Database Management Systems are supported?
 
-With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMS using SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and Mysql.
+With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMSusing SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and Mysql.
 
 ### Are there any limitations or caveats?
 
