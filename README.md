@@ -304,5 +304,5 @@ return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : n
 
 ### Examples
 
-- [Aggregates](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/DataProvider/StatisticsDataProvider.php)
-- [Product with CTE](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/DataProvider/ProductDataProvider.php)
+- [Aggregates](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/State/StatisticsProvider.php)
+- [Product with CTE](https://github.com/soyuka/esql/blob/main/tests/Fixtures/TestBundle/State/ProductProvider.php)
