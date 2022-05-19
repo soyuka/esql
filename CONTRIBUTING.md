@@ -36,7 +36,9 @@ ESQL_DB=postgres vendor/bin/phpunit --stop-on-failure
 
 ```
 docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=ApiPlatformRocks2020!' -p 1433:1433 mcr.microsoft.com/mssql/server:2019-latest
+# Might be that the container id is not the first one
+docker exec $(docker ps | tail -n 1 | awk '{print $1}') /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ApiPlatformRocks2020! -d master -Q "CREATE DATABASE api_platform_test;"
 ESQL_DB=sqlsrv tests/Fixtures/app/console cache:clear
-ESQL_DB=sqlsrv d:s:c # doctrine:schema:create
+ESQL_DB=sqlsrv tests/Fixtures/app/console d:s:c # doctrine:schema:create
 ESQL_DB=sqlsrv vendor/bin/phpunit --stop-on-failure
 ```

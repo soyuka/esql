@@ -20,7 +20,7 @@
     <server name="KERNEL_DIR" value="tests/Fixtures/app/"/>
     <server name="KERNEL_CLASS" value="AppKernel"/>
     <server name="APP_ENV" value="test"/>
-    <server name="SHELL_VERBOSITY" value="3"/>
+    <server name="SHELL_VERBOSITY" value="1"/>
   </php>
   <testsuites>
     <testsuite name="Project Test Suite">

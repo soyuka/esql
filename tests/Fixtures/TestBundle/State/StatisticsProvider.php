@@ -42,9 +42,9 @@ final class StatisticsProvider implements ProviderInterface
         $car = $this->esql->__invoke(Car::class, CarStatistics::class, 'car');
         /** @var string */
         $groupBy = $car->columns(['sold', 'color'], $car::AS_STRING | $car::WITHOUT_ALIASES);
-
-        $query = match ($connection->getDriver()->getDatabasePlatform()::class) {
-            SQLServerPlatform::class => <<<SQL
+        $driver = $connection->getDriver()->getDatabasePlatform();
+        $query = match (true) {
+            $driver instanceof SQLServerPlatform => <<<SQL
                 SELECT AVG(CAST(car.price as BIGINT)) as car_totalPrice, CONCAT(CASE WHEN car.sold = '1' THEN 'sold' ELSE 'not sold' END, COALESCE(car.color, 'No color information')) as car_identifier, {$car->columns(['sold', 'color'])}
                 FROM {$car->table()}
                 GROUP BY {$groupBy}

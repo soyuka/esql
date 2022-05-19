@@ -96,37 +96,15 @@ class DataPaginator
 
     protected function paginate(ESQLInterface $esql, string $query, array $parameters, array $paginationOptions, array $context = []): ApiPlatformPartialPaginatorInterface
     {
-        ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $paginationOptions;
+        ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'page' => $page, 'partial' => $isPartialEnabled] = $paginationOptions;
 
         $originalQuery = $query;
-        $driverName = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform()::class;
-        switch ($driverName) {
-            case SQLServerPlatform::class:
-                Context::setMode('NO_ENCLOSING_QUOTES');
-                $parser = new Parser($query);
-                /** @var string */
-                $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+        $driver = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform();
 
-                if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
-                    /** @var string */
-                    $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
-                    $query = <<<SQL
-$query
-) AS paginated
-WHERE RowNumber BETWEEN $firstResult AND $nextResult
-SQL;
-                } else {
-                    $statement = $parser->statements[0];
-                    if ($statement->order) {
-                        $query = "$query OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
-                    } else {
-                        $query = "$query ORDER BY $orderBy OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
-                    }
-                }
-                break;
-            default:
-                $query = "$query LIMIT $itemsPerPage OFFSET $firstResult";
-        }
+        $query = match (true) {
+            $driver instanceof SQLServerPlatform => $this->getSQLServerLimitQuery($esql, $query, $context, $paginationOptions),
+            default => "$query LIMIT $itemsPerPage OFFSET $firstResult"
+        };
 
         $connection = $this->managerRegistry->getConnection();
         $stmt = $connection->prepare($query);
@@ -140,12 +118,39 @@ SQL;
         return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $this->count($esql, $originalQuery, $parameters, $context));
     }
 
+    private function getSQLServerLimitQuery(ESQLInterface $esql, string $query, array $context = [], array $paginationOptions = []): string
+    {
+        ['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page] = $paginationOptions;
+        Context::setMode('NO_ENCLOSING_QUOTES');
+        $parser = new Parser($query);
+        /** @var string */
+        $orderBy = $context[self::ORDER_BY] ?? $esql->columns(null, ESQLInterface::IDENTIFIERS | ESQLInterface::WITHOUT_ALIASES | ESQLInterface::WITHOUT_JOIN_COLUMNS | ESQLInterface::AS_STRING);
+
+        if (\count($parser->errors) || !isset($parser->statements[0]) || !$parser->statements[0] instanceof SelectStatement) {
+            /** @var string */
+            $query = preg_replace(self::REGEX_LAST_SELECT, "SELECT * FROM (SELECT ROW_NUMBER() OVER(ORDER BY {$orderBy}) AS RowNumber,", $query, 1);
+
+            return <<<SQL
+$query
+) AS paginated
+WHERE RowNumber BETWEEN $firstResult AND $nextResult
+SQL;
+        }
+
+        $statement = $parser->statements[0];
+        if ($statement->order) {
+            return "$query OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
+        }
+
+        return "$query ORDER BY $orderBy OFFSET $firstResult ROWS FETCH NEXT $itemsPerPage ROWS ONLY";
+    }
+
     protected function count(ESQLInterface $esql, string $query, array $parameters = [], array $context = []): float
     {
         $connection = $this->managerRegistry->getConnection();
         $driver = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform();
 
-        $query = match ($driver) {
+        $query = match (true) {
             $driver instanceof SQLServerPlatform => $this->getSQLServerCountQuery($esql, $query, $context),
             default => preg_replace(self::REGEX_LAST_SELECT, 'SELECT COUNT(1) OVER () AS _esql_count,', $query, 1)
         };

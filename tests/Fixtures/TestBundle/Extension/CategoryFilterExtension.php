@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Extension;
 
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\QueryCollectionExtensionInterface;
 use Soyuka\ESQL\ESQLInterface;
@@ -40,10 +41,11 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
             throw new BadRequestHttpException();
         }
 
+        $recursive = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform() instanceof SQLServerPlatform ? '' : ' RECURSIVE ';
         $product = $this->esql->__invoke($resourceClass);
         $category = $product(Category::class);
         $query = <<<SQL
-WITH RECURSIVE
+WITH{$recursive}
     descendants(identifier, name, parent_id) AS (
         SELECT c.identifier, c.name, c.parent_id FROM category c WHERE c.identifier = :category
         UNION ALL

@@ -186,7 +186,6 @@ jobs:
       - name: Setup sqlserver
         run: |
           sleep 7
-          echo $(docker ps | tail -n 1 | awk '{print $1}')
           docker exec $(docker ps | tail -n 1 | awk '{print $1}') /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ApiPlatformRocks2020! -d master -Q "CREATE DATABASE api_platform_test;"
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
