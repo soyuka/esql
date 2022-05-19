@@ -11,34 +11,28 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Bridge\ApiPlatform\DataPersister;
+namespace Soyuka\ESQL\Bridge\ApiPlatform\State;
 
-use ApiPlatform\Core\DataPersister\ContextAwareDataPersisterInterface;
-use ApiPlatform\Core\DataPersister\DataPersisterInterface;
+use ApiPlatform\Metadata\DeleteOperationInterface;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProcessorInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Jane\Component\AutoMapper\AutoMapperInterface;
 use Soyuka\ESQL\Bridge\Doctrine\ClassInfoTrait;
 use Soyuka\ESQL\ESQLInterface;
 
-final class DataPersister implements DataPersisterInterface, ContextAwareDataPersisterInterface
+final class Processor implements ProcessorInterface
 {
     use ClassInfoTrait;
 
-    private ManagerRegistry $managerRegistry;
-    private AutoMapperInterface $mapper;
-    private ESQLInterface $esql;
-
-    public function __construct(ManagerRegistry $managerRegistry, AutoMapperInterface $mapper, ESQLInterface $esql)
+    public function __construct(private readonly ManagerRegistry $managerRegistry, private readonly AutoMapperInterface $mapper, private readonly ESQLInterface $esql)
     {
-        $this->managerRegistry = $managerRegistry;
-        $this->mapper = $mapper;
-        $this->esql = $esql;
     }
 
     /**
      * @param mixed $data
      */
-    public function persist($data, array $context = [])
+    private function persist($data, array $uriVariables = [], array $context = []): mixed
     {
         $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
@@ -75,7 +69,7 @@ SQL;
     /**
      * @param mixed $data
      */
-    public function remove($data, array $context = []): void
+    private function remove($data, array $uriVariables = [], array $context = []): void
     {
         $esql = $this->esql->__invoke($data);
         $connection = $this->managerRegistry->getConnection();
@@ -89,10 +83,16 @@ SQL;
     }
 
     /**
-     * @param mixed $data
+     * {@inheritDoc}
      */
-    public function supports($data, array $context = []): bool
+    public function process($data, Operation $operation, array $uriVariables = [], array $context = [])
     {
-        return null !== $this->managerRegistry->getManagerForClass($this->getObjectClass($data));
+        if ($operation instanceof DeleteOperationInterface) {
+            $this->remove($data, $uriVariables, $context);
+
+            return;
+        }
+
+        return $this->persist($data, $uriVariables, $context);
     }
 }

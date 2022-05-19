@@ -11,67 +11,31 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\DataProvider;
+namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\State;
 
-use ApiPlatform\Core\DataProvider\CollectionDataProviderInterface;
-use ApiPlatform\Core\DataProvider\ContextAwareCollectionDataProviderInterface;
-use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
-use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\Pagination\PartialPaginatorInterface;
+use ApiPlatform\State\ProviderInterface;
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\ESQLInterface;
 use Soyuka\ESQL\ESQLMapperInterface;
 use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Category;
-use Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity\Product;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-final class ProductDataProvider implements RestrictedDataProviderInterface, CollectionDataProviderInterface, ContextAwareCollectionDataProviderInterface
+final class ProductProvider implements ProviderInterface
 {
-    private RequestStack $requestStack;
-    private ManagerRegistry $managerRegistry;
-    private ESQLMapperInterface $mapper;
-    private ESQLInterface $esql;
-    private ContextAwareCollectionDataProviderInterface $decorated;
+    private readonly ESQLMapperInterface $mapper;
 
-    public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry, ESQLInterface $esql, ContextAwareCollectionDataProviderInterface $decorated)
+    public function __construct(private readonly RequestStack $requestStack, private readonly ManagerRegistry $managerRegistry, private readonly ESQLInterface $esql, private readonly ProviderInterface $decorated)
     {
-        $this->requestStack = $requestStack;
-        $this->managerRegistry = $managerRegistry;
-        $this->esql = $esql;
-        $this->decorated = $decorated;
-    }
-
-    public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
-    {
-        return Product::class === $resourceClass;
-    }
-
-    public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
-    {
-        $data = $this->decorated->getCollection($resourceClass, $operationName, $context);
-        if ($data instanceof PartialPaginatorInterface && !\count($data)) {
-            return $data;
-        }
-        $categories = $this->getCategories();
-        foreach ($data as $product) {
-            foreach ($categories as $category) {
-                if ($product->categoryRelation->identifier === $category->identifier) {
-                    $product->categoryRelation = $category;
-                }
-
-                if ($product->categoryRelation->parent && $product->categoryRelation->parent->identifier === $category->identifier) {
-                    $product->categoryRelation->parent = $category;
-                }
-            }
-        }
-
-        return $data;
     }
 
     private function getCategories(): array
     {
+        /** @var array|string */
         $categoryParameter = null === ($request = $this->requestStack->getCurrentRequest()) ? null : $request->query->get('category');
-        /** @psalm-suppress DocblockTypeContradiction */
         if (\is_array($categoryParameter)) {
             throw new BadRequestHttpException();
         }
@@ -79,7 +43,7 @@ final class ProductDataProvider implements RestrictedDataProviderInterface, Coll
         $connection = $this->managerRegistry->getConnection();
         $categoryPredicate = $categoryParameter ? 'c.identifier = :category' : 'c.parent_id IS NULL';
         $category = $this->esql->__invoke(Category::class);
-        $recursive = 'pdo_sqlsrv' === $connection->getDriver()->getName() ? '' : ' RECURSIVE ';
+        $recursive = $connection->getDriver()->getDatabasePlatform() instanceof SQLServerPlatform ? '' : ' RECURSIVE ';
 
         $query = <<<SQL
 WITH{$recursive}
@@ -99,7 +63,7 @@ SELECT {$category->columns()} FROM descendants {$category->alias()}
 SQL;
 
         $stmt = $connection->executeQuery($query, $categoryParameter ? ['category' => $categoryParameter] : []);
-        $data = $stmt->fetchAll();
+        $data = $stmt->fetchAllAssociative();
         $categories = $category->map($data);
 
         foreach ($categories as $category) {
@@ -115,5 +79,31 @@ SQL;
         }
 
         return $categories;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
+    {
+        /** @var array */
+        $data = $this->decorated->provide($operation, $uriVariables, $context);
+        if ($data instanceof PartialPaginatorInterface && !\count($data)) {
+            return $data;
+        }
+        $categories = $this->getCategories();
+        foreach ($data as $product) {
+            foreach ($categories as $category) {
+                if ($product->categoryRelation->identifier === $category->identifier) {
+                    $product->categoryRelation = $category;
+                }
+
+                if ($product->categoryRelation->parent && $product->categoryRelation->parent->identifier === $category->identifier) {
+                    $product->categoryRelation->parent = $category;
+                }
+            }
+        }
+
+        return $data;
     }
 }

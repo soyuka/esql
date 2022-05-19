@@ -21,15 +21,8 @@ use Symfony\Component\PropertyInfo\Type;
 
 class FilterDescriptor implements FilterInterface
 {
-    private $resourceMetadataFactory;
-    private $propertyNameCollectionFactory;
-    private $propertyMetadataFactory;
-
-    public function __construct(ResourceMetadataFactoryInterface $resourceMetadataFactory, PropertyNameCollectionFactoryInterface $propertyNameCollectionFactory, PropertyMetadataFactoryInterface $propertyMetadataFactory)
+    public function __construct(private readonly ResourceMetadataFactoryInterface $resourceMetadataFactory, private readonly PropertyNameCollectionFactoryInterface $propertyNameCollectionFactory, private readonly PropertyMetadataFactoryInterface $propertyMetadataFactory)
     {
-        $this->resourceMetadataFactory = $resourceMetadataFactory;
-        $this->propertyNameCollectionFactory = $propertyNameCollectionFactory;
-        $this->propertyMetadataFactory = $propertyMetadataFactory;
     }
 
     public function getDescription(string $resourceClass): array

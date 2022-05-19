@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Extension;
 
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
 use Doctrine\Persistence\ManagerRegistry;
 use Soyuka\ESQL\Bridge\ApiPlatform\Extension\QueryCollectionExtensionInterface;
 use Soyuka\ESQL\ESQLInterface;
@@ -23,15 +24,8 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class CategoryFilterExtension implements QueryCollectionExtensionInterface
 {
-    private RequestStack $requestStack;
-    private ESQLInterface $esql;
-    private ManagerRegistry $managerRegistry;
-
-    public function __construct(RequestStack $requestStack, ESQLInterface $esql, ManagerRegistry $managerRegistry)
+    public function __construct(private readonly RequestStack $requestStack, private readonly ESQLInterface $esql, private readonly ManagerRegistry $managerRegistry)
     {
-        $this->requestStack = $requestStack;
-        $this->esql = $esql;
-        $this->managerRegistry = $managerRegistry;
     }
 
     public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array
@@ -47,10 +41,9 @@ final class CategoryFilterExtension implements QueryCollectionExtensionInterface
             throw new BadRequestHttpException();
         }
 
+        $recursive = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform() instanceof SQLServerPlatform ? '' : ' RECURSIVE ';
         $product = $this->esql->__invoke($resourceClass);
         $category = $product(Category::class);
-
-        $recursive = 'pdo_sqlsrv' === $this->managerRegistry->getConnection()->getDriver()->getName() ? '' : ' RECURSIVE ';
         $query = <<<SQL
 WITH{$recursive}
     descendants(identifier, name, parent_id) AS (

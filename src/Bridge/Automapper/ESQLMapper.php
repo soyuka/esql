@@ -20,11 +20,8 @@ use Soyuka\ESQL\ESQLMapperInterface;
 
 final class ESQLMapper extends Base implements ESQLMapperInterface
 {
-    private AutoMapperInterface $automapper;
-
-    public function __construct(AutoMapperInterface $automapper)
+    public function __construct(private readonly AutoMapperInterface $automapper)
     {
-        $this->automapper = $automapper;
     }
 
     public function map(array $data, string $class, ESQLAliasInterface $a)

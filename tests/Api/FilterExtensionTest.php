@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Api;
 
+use Doctrine\DBAL\Platforms\SqlitePlatform;
+use Doctrine\DBAL\Platforms\SQLServerPlatform;
+
 final class FilterExtensionTest extends AbstractTest
 {
     public function testSimpleFilter(): void
@@ -38,7 +41,8 @@ final class FilterExtensionTest extends AbstractTest
         $container = $kernel->getContainer();
         $registry = $container->get('doctrine');
 
-        if (\in_array($registry->getConnection()->getDriver()->getName(), ['pdo_sqlite', 'pdo_sqlsrv'], true)) {
+        $platform = $registry->getConnection()->getDriver()->getDatabasePlatform();
+        if ($platform instanceof SqlitePlatform || $platform instanceof SQLServerPlatform) {
             $this->markTestSkipped();
         }
 

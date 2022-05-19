@@ -13,28 +13,23 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Bridge\ApiPlatform\Extension;
 
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Doctrine\Persistence\ManagerRegistry;
-use Soyuka\ESQL\Bridge\ApiPlatform\DataProvider\DataPaginator;
+use Soyuka\ESQL\Bridge\ApiPlatform\State\DataPaginator;
 use Soyuka\ESQL\ESQLInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 final class SortExtension implements QueryCollectionExtensionInterface
 {
-    private RequestStack $requestStack;
-    private ESQLInterface $esql;
-    private ManagerRegistry $managerRegistry;
-
     public const ORDER_ASC = 'asc';
     public const ORDER_DESC = 'desc';
     public const NULLS_FIRST = 'nullsfirst';
     public const NULLS_LAST = 'nullslast';
     public const PARAMETER_NAME = 'sort';
 
-    public function __construct(RequestStack $requestStack, ESQLInterface $esql, ManagerRegistry $managerRegistry)
+    public function __construct(private readonly RequestStack $requestStack, private readonly ESQLInterface $esql, private readonly ManagerRegistry $managerRegistry)
     {
-        $this->requestStack = $requestStack;
-        $this->esql = $esql;
-        $this->managerRegistry = $managerRegistry;
     }
 
     public function apply(string $query, string $resourceClass, ?string $operationName = null, array $parameters = [], array $context = []): array
@@ -48,7 +43,7 @@ final class SortExtension implements QueryCollectionExtensionInterface
         $esql = $this->esql->__invoke($resourceClass);
         $orderClauses = [];
 
-        foreach (explode(',', $sort) as $sortPredicate) {
+        foreach (explode(',', (string) $sort) as $sortPredicate) {
             $parts = explode('.', $sortPredicate);
             $property = $parts[0] ?? null;
 
@@ -59,12 +54,12 @@ final class SortExtension implements QueryCollectionExtensionInterface
 
             $direction = $this->getPredicate($parts[1] ?? self::ORDER_ASC);
             $nulls = null;
-            if ($direction && 0 === strpos($direction, 'nulls')) {
+            if ($direction && str_starts_with($direction, 'nulls')) {
                 $nulls = $direction;
                 $direction = self::ORDER_ASC;
             }
 
-            $nulls = $nulls ?? $this->getPredicate($parts[2] ?? null);
+            $nulls ??= $this->getPredicate($parts[2] ?? null);
 
             foreach ($this->getOrderClause($column, $direction ?? self::ORDER_ASC, $nulls) as $orderClause) {
                 $orderClauses[] = $orderClause;
@@ -82,32 +77,26 @@ final class SortExtension implements QueryCollectionExtensionInterface
             return null;
         }
 
-        switch ($predicate) {
-            case self::ORDER_ASC:
-            case self::ORDER_DESC:
-            case self::NULLS_FIRST:
-            case self::NULLS_LAST:
-                return $predicate;
-            default:
-                return self::ORDER_ASC;
-        }
+        return match ($predicate) {
+            self::ORDER_ASC, self::ORDER_DESC, self::NULLS_FIRST, self::NULLS_LAST => $predicate,
+            default => self::ORDER_ASC,
+        };
     }
 
     private function getOrderClause(string $column, string $direction, ?string $nulls): iterable
     {
-        switch ($this->managerRegistry->getConnection()->getDriver()->getName()) {
-            case 'pdo_pgsql':
-                yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
-                break;
-            case 'pdo_sqlite':
-                if ($nulls) {
-                    yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
-                }
+        $driver = $this->managerRegistry->getConnection()->getDriver()->getDatabasePlatform();
 
-                yield "{$column} {$direction}";
-                break;
-            default:
-                yield "{$column} {$direction}";
+        if ($driver instanceof PostgreSQLPlatform) {
+            yield "{$column} {$direction}".($nulls ? ' NULLS '.(self::NULLS_FIRST === $nulls ? 'FIRST' : 'LAST') : '');
+        } elseif ($driver instanceof SqlitePlatform) {
+            if ($nulls) {
+                yield "{$column} ".(self::NULLS_LAST === $nulls ? 'IS NULL' : 'IS NOT NULL');
+            }
+
+            yield "{$column} {$direction}";
+        } else {
+            yield "{$column} {$direction}";
         }
     }
 

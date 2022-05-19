@@ -1,0 +1,32 @@
+[
+    {
+        "location": "App\\Tests\\Api\\CTETest::testGetCollection",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Tests_Fixtures_TestBundle_Entity_Product\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    },
+    {
+        "location": "App\\Tests\\Api\\CTETest::testGetCollection",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Tests_Fixtures_TestBundle_Entity_Category\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    },
+    {
+        "location": "App\\Tests\\Api\\CollectionTest::testGetCollection",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Tests_Fixtures_TestBundle_Entity_Car\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    },
+    {
+        "location": "App\\Tests\\Api\\CollectionTest::testGetCollection",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Tests_Fixtures_TestBundle_Entity_Model\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    },
+    {
+        "location": "App\\Tests\\Api\\CollectionTest::testStatistics",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Tests_Fixtures_TestBundle_Model_CarStatistics\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    },
+    {
+        "location": "Soyuka\\ESQL\\Mapper\\Tests\\ESQLMapperTest::testMapTo with data set #0",
+        "message": "Method \"Jane\\Component\\AutoMapper\\MapperInterface::map()\" might add \"mixed\" as a native return type declaration in the future. Do the same in implementation \"Symfony_Mapper_array_Soyuka_ESQL_Mapper_Tests_DTO\" now to avoid errors or add an explicit @return annotation to suppress this message.",
+        "count": 1
+    }
+]

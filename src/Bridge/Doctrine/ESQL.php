@@ -26,13 +26,8 @@ use Soyuka\ESQL\Exception\RuntimeException;
 
 final class ESQL extends Base
 {
-    private ManagerRegistry $registry;
-    private ?ESQLMapperInterface $mapper;
-
-    public function __construct(ManagerRegistry $registry, ?ESQLMapperInterface $mapper = null)
+    public function __construct(private readonly ManagerRegistry $registry, private readonly ?ESQLMapperInterface $mapper = null)
     {
-        $this->registry = $registry;
-        $this->mapper = $mapper;
     }
 
     public function table(): string
@@ -76,7 +71,7 @@ final class ESQL extends Base
             try {
                 $relation = $this->__invoke($association['targetEntity']);
                 $relationAlias = $relation->alias();
-            } catch (InvalidArgumentException $e) {
+            } catch (InvalidArgumentException) {
                 $relationAlias = (string) new ESQLAlias($fieldName, $this->alias);
             }
 
@@ -114,7 +109,7 @@ final class ESQL extends Base
                 try {
                     $relation = $this->__invoke($association['targetEntity']);
                     $relationAlias = $relation->alias();
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidArgumentException) {
                     $relationAlias = (string) new ESQLAlias($association['fieldName'], $this->alias);
                 }
 
@@ -178,6 +173,7 @@ final class ESQL extends Base
             throw new RuntimeException('No manager for class '.$class);
         }
 
+        /** @var class-string $class */
         $classMetadata = $manager->getClassMetadata($class);
         if (!$classMetadata instanceof ClassMetadataInfo) {
             throw new RuntimeException('No class metadata for class '.$class);
@@ -190,9 +186,9 @@ final class ESQL extends Base
     {
         try {
             return parent::__invoke($objectOrClass, $mapTo, $aliasTo);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             /** @var class-string */
-            $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
+            $class = \is_string($objectOrClass) ? $objectOrClass : $objectOrClass::class;
             $that = clone $this;
 
             if ($this->class && $this->alias) {
@@ -220,7 +216,7 @@ final class ESQL extends Base
         try {
             $metadata = $this->getClassMetadata($class);
             $relationMetadata = $this->getClassMetadata($relationClass);
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             throw new InvalidArgumentException(sprintf('%s has no relation with %s.', $class, $relationClass));
         }
 

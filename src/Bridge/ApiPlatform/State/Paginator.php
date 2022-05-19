@@ -11,21 +11,17 @@
 
 declare(strict_types=1);
 
-namespace Soyuka\ESQL\Bridge\ApiPlatform\DataProvider;
+namespace Soyuka\ESQL\Bridge\ApiPlatform\State;
 
-use ApiPlatform\Core\DataProvider\PartialPaginatorInterface;
+use ApiPlatform\State\Pagination\PaginatorInterface;
 
-final class PartialPaginator implements PartialPaginatorInterface, \IteratorAggregate
+final class Paginator implements PaginatorInterface, \IteratorAggregate
 {
-    private \Iterator $iterator;
-    private float $currentPage;
-    private float $itemsPerPage;
+    private readonly \Iterator $iterator;
 
-    public function __construct(array $data, float $currentPage, float $itemsPerPage)
+    public function __construct(array $data, private readonly float $currentPage, private readonly float $itemsPerPage, private readonly float $totalItems = 0)
     {
         $this->iterator = (new \ArrayObject($data))->getIterator();
-        $this->currentPage = $currentPage;
-        $this->itemsPerPage = $itemsPerPage;
     }
 
     public function getCurrentPage(): float
@@ -41,6 +37,16 @@ final class PartialPaginator implements PartialPaginatorInterface, \IteratorAggr
     public function getIterator(): \Traversable
     {
         return $this->iterator;
+    }
+
+    public function getLastPage(): float
+    {
+        return ceil($this->totalItems / $this->itemsPerPage);
+    }
+
+    public function getTotalItems(): float
+    {
+        return $this->totalItems;
     }
 
     public function count(): int

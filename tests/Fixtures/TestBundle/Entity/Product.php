@@ -13,54 +13,40 @@ declare(strict_types=1);
 
 namespace Soyuka\ESQL\Tests\Fixtures\TestBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiProperty;
-use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
+use Soyuka\ESQL\Tests\Fixtures\TestBundle\State\ProductProvider;
 use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
 use Symfony\Component\Uid\Ulid;
 
-/**
- * @ORM\Entity
- */
-#[ApiResource(iri: 'http://schema.org/Product', attributes: ['esql' => true])]
+#[ApiResource(
+    types: ['http://schema.org/Product'],
+    provider: ProductProvider::class
+)]
+#[ORM\Entity]
 class Product
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="ulid", unique=true)
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     * @ORM\CustomIdGenerator(class=UlidGenerator::class)
-     */
+    #[ORM\Id]
+    #[ORM\Column(type: 'ulid', unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: UlidGenerator::class)]
     private Ulid $id;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    #[ApiProperty(iri: 'http://schema.org/name')]
+    #[ApiProperty(types: ['http://schema.org/name'])]
+    #[ORM\Column(type: 'string', length: 255)]
     public string $name;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    #[ApiProperty(iri: 'http://schema.org/description')]
+    #[ApiProperty(types: ['http://schema.org/description'])]
+    #[ORM\Column(type: 'string', length: 255)]
     public string $description;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=Category::class)
-     * @ORM\JoinColumn(name="category_id", referencedColumnName="identifier")
-     *
-     * @var Category
-     */
     #[ApiProperty(readable: false)]
-    public $categoryRelation; // this property is not typed on purpose
-
-    #[ApiProperty(iri: 'http://schema.org/category')]
+    #[ORM\ManyToOne(targetEntity: Category::class)]
+    #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'identifier')]
+    public Category $categoryRelation;
+    // this property is not typed on purpose
+    #[ApiProperty(types: ['http://schema.org/category'])]
     private string $category = '';
-
-    /**
-     * @ORM\Column(type="string", length=14)
-     */
-    #[ApiProperty(iri: 'http://schema.org/gtin')]
+    #[ApiProperty(types: ['http://schema.org/gtin'])]
+    #[ORM\Column(type: 'string', length: 14)]
     public string $gtin;
 
     public function setId(string $id): self

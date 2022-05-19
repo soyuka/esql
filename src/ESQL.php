@@ -69,7 +69,7 @@ abstract class ESQL implements ESQLInterface
     public function __invoke($objectOrClass, ?string $mapTo = null, ?string $aliasTo = null): ESQLInterface
     {
         /** @var class-string */
-        $class = \is_string($objectOrClass) ? $objectOrClass : \get_class($objectOrClass);
+        $class = \is_string($objectOrClass) ? $objectOrClass : $objectOrClass::class;
         $that = clone $this;
 
         if ($this->class && $this->alias) {
