@@ -5,7 +5,7 @@
     "require": {
         "phpmyadmin/sql-parser": "^5.4",
         "jms/parser-lib": "^1.0",
-        "symfony/dependency-injection": "^5.2"
+        "symfony/dependency-injection": "^6.0"
     },
     "require-dev": {
         "phpdocumentor/reflection-docblock": "^5.2",
@@ -18,7 +18,7 @@
         "symfony/http-client": "^5.2",
         "symfony/browser-kit": "^5.2",
         "phpspec/prophecy-phpunit": "^2.0",
-        "api-platform/core": "2.7.0-alpha.4",
+        "api-platform/core": "dev-fix/jsonld-property-metadata-iris",
         "doctrine/orm": "^2.8",
         "jane-php/automapper": "^7.2",
         "symfony/serializer": "^5.2",
@@ -50,5 +50,11 @@
         "psr-4": {
             "Soyuka\\ESQL\\Tests\\": "tests/"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../forks/core2"
+        }
+    ]
 }
