@@ -41,18 +41,17 @@ use ApiPlatform\Metadata\ApiResource;
 use Soyuka\ESQL\Bridge\ApiPlatform\State\Provider;
 use Soyuka\ESQL\Bridge\ApiPlatform\State\Processor;
 
-/**
- * #[ApiResource(provider: Provider::class, processor: Processor::class)]
- */
+#[ApiResource(provider: Provider::class, processor: Processor::class)]
  class Car {}
 ```
 
 This will automatically enable the use of:
+
   - a `CollectionProvider` using raw SQL. 
   - an `ItemProvider` using raw SQL. 
-  - compose-able filters built using [Postgrest](https://postgrest.org/en/v7.0.0/api.html#horizontal-filtering-rows) specification
-  - a powerful sort extension also following [Postgrest](https://postgrest.org/en/v7.0.0/api.html#ordering) specification
-  - our own `DataPaginator` that you can extend to your will
+  - compose-able filters built using [Postgrest](https://postgrest.org/en/v7.0.0/api.html#horizontal-filtering-rows) specification.
+  - a powerful sort extension also following [Postgrest](https://postgrest.org/en/v7.0.0/api.html#ordering) specification.
+  - our own `DataPaginator` that you can extend to your will.
 
 You can find examples of [Sorting](./tests/Api/SortExtensionTest.php) and [Filtering](./tests/Api/FilterExtensionTest.php).
 
@@ -68,7 +67,7 @@ It's planned to add support for Eloquent or other ORM systems once the API is st
 
 ### Which Database Management Systems are supported?
 
-With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMSusing SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and Mysql.
+With this library you write native SQL. All our helpers will output strings that are useable in the standard SQL specification and therefore should be supported by every relational DBMSusing SQL. The API Platform bridge is tested with SQLite and Postgres. It's only a matter of time to add tests for MariaDB and MySQL.
 
 ### Are there any limitations or caveats?
 
@@ -80,7 +79,8 @@ The Mapper maps arrays received via the [PHP Data Objects (PDO) statement](https
 
 ### What about writes on the API Platform bridge?
 
-Write support, extended to how Doctrine does is is rather complex especially if you want to support embed writes (write relation at the same time as the main entity). It is possible but there's not much benefits in adding this on our bridge. However you can use some of our helpers to do updates and inserts.
+Write support, extended to how Doctrine does is is rather complex especially if you want to support embed writes (write relation at the same time as the main entity).
+It is possible but there's not much benefits in adding this on our bridge. However you can use some of our helpers to do updates and inserts.
 
 A simple update:
 
@@ -282,7 +282,13 @@ If you want to handle the pagination yourself, we provide a way to do so:
 $resourceClass = Car::class;
 $operationName = 'get';
 $esql = $this->esql->__invoke($resourceClass);
-['itemsPerPage' => $itemsPerPage, 'firstResult' => $firstResult, 'nextResult' => $nextResult, 'page' => $page, 'partial' => $isPartialEnabled] = $this->dataPaginator->getPaginationOptions($resourceClass, $operationName);
+[
+    'itemsPerPage' => $itemsPerPage,
+    'firstResult' => $firstResult,
+    'nextResult' => $nextResult,
+    'page' => $page,
+    'partial' => $isPartialEnabled
+] = $this->dataPaginator->getPaginationOptions($resourceClass, $operationName);
 
 $query = <<<SQL
 SELECT {$esql->columns()} FROM {$esql->table()}
@@ -298,8 +304,11 @@ SQL;
 
 // get count results somehow
 $count = $countResult['count'];
+if ($isPartialEnabled) {
+    return new PartialPaginator($data, $page, $itemsPerPage);
+}
 
-return $isPartialEnabled ? new PartialPaginator($data, $page, $itemsPerPage) : new Paginator($data, $page, $itemsPerPage, $count);
+return new Paginator($data, $page, $itemsPerPage, $count);
 ```
 
 ### Examples
