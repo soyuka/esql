@@ -3,6 +3,7 @@
     "description": "PHP Extended Structured Query Language",
     "type": "library",
     "require": {
+        "php": ">=8.1",
         "phpmyadmin/sql-parser": "^5.4",
         "jms/parser-lib": "^1.0",
         "symfony/dependency-injection": "^6.0"
